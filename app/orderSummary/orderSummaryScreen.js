@@ -25,69 +25,6 @@ import { Switch, RadioButton } from "react-native-paper";
 
 const { width, height } = Dimensions.get("screen");
 
-const handPickedItemsList = [
-  {
-    id: "h1",
-    image: require("../../assets/images/handpicked_item/handpicked_item_1.png"),
-    percentageOff: 50,
-    name: "Liveasy Wellness Multivitamin Tablets Bottle",
-    tabletsOrCapsulesCount: 60,
-    type: "Tablet(s)",
-    price: 6,
-    discountPrice: 12,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h2",
-    image: require("../../assets/images/handpicked_item/handpicked_item_2.png"),
-    percentageOff: 30,
-    name: "Liveasy Wellness Multi-vitamin Tablets Bottle",
-    tabletsOrCapsulesCount: 60,
-    type: "Tablet(s)",
-    price: 8,
-    discountPrice: 13,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h3",
-    image: require("../../assets/images/handpicked_item/handpicked_item_3.png"),
-    percentageOff: 55,
-    name: "Liveasy WellnessCalcium, Magnesium Tablets",
-    tabletsOrCapsulesCount: 60,
-    type: "Tablet(s)",
-    price: 7,
-    discountPrice: 15,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h4",
-    image: require("../../assets/images/handpicked_item/handpicked_item_4.png"),
-    percentageOff: 20,
-    name: "Everherb Moringa (drumsticks) 500mg ",
-    tabletsOrCapsulesCount: 60,
-    type: "Capsule(s)",
-    price: 4,
-    discountPrice: 6,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h5",
-    image: require("../../assets/images/handpicked_item/handpicked_item_5.png"),
-    percentageOff: 10,
-    name: "Revital H- Daily Health Supplement - Capsules",
-    tabletsOrCapsulesCount: 30,
-    type: "Capsule(s)",
-    price: 4,
-    discountPrice: 5,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-];
-
 const someTermsAndConditionsList = [
   {
     id: "1",
@@ -104,36 +41,6 @@ const someTermsAndConditionsList = [
 ];
 
 const cartList = [];
-
-const couponList = [
-  {
-    id: "1",
-    image: require("../../assets/images/offer_icon/amazon_pay.png"),
-    title: "Additional cashback upto ₹5 on Amaon pay | No coupon required",
-    description:
-      "Pay via Amazon Pay and get Min ₹1 to Max ₹5 cashback, Valid on min. transaction of ₹3.",
-    isApply: false,
-    expiresDays: 14,
-  },
-  {
-    id: "2",
-    image: require("../../assets/images/offer_icon/hsbc.jpg"),
-    title: "5% cashback on HSBC Credit card | No coupon code required",
-    description:
-      "5% additional cashback up to ₹3 on payment made via HSBC Credit card on a minimum transaction of ₹10",
-    isApply: false,
-    expiresDays: 13,
-  },
-  {
-    id: "3",
-    image: require("../../assets/images/offer_icon/curefit.png"),
-    title:
-      "Use code : CULTFIT5 | Get 5% OFF on Live Training Sessions with Curefit",
-    description: "5% OFF on Live Training Sessions with Curefit",
-    isApply: true,
-    code: "CULTFIT5",
-  },
-];
 
 const orderSummaryScreen = () => {
   const navigation = useNavigation();

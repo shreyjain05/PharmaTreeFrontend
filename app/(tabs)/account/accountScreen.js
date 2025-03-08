@@ -1,392 +1,277 @@
-    import React, { useState, useContext } from "react";
-    import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions, ScrollView } from "react-native";
-    import { Colors, Fonts, Sizes } from "../../../constant/styles";
-    import { TextInput } from 'react-native-paper';
-    import { useNavigation } from "expo-router";
-    import { User, ChevronRight, ListChecks, PlusCircle, Upload, CreditCard, FileText, Package, Percent, CreditCardIcon, Info, Clock, Target } from "lucide-react-native";
-    import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
-    import { AppContext } from "../../context/AppProvider"
+import React, { useState, useContext, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Dimensions,
+  ScrollView,
+  Image,
+} from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { Colors, Fonts, Sizes } from "../../../constant/styles";
+import { Card } from "react-native-paper";
+import {
+  User,
+  ChevronRight,
+  ListChecks,
+  PlusCircle,
+  Upload,
+  CreditCard,
+  FileText,
+  Package,
+  Percent,
+  CreditCardIcon,
+  Info,
+  Clock,
+  Target,
+} from "lucide-react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { AppContext } from "../../context/AppProvider";
 
+const { width } = Dimensions.get("screen");
 
-    const { width } = Dimensions.get('screen');
+const AccountScreen = () => {
+  const navigation = useNavigation();
+  const { loggedInUser, isAdmin } = useContext(AppContext);
 
-    const AccountScreen = () => {
+  const [logoutVisible, setLogoutVisible] = useState(false);
 
-        const navigation = useNavigation();
-        const { isAdmin } = useContext(AppContext);
+  // ✅ Proper useFocusEffect with useCallback
+  useFocusEffect(
+    useCallback(() => {
+      console.log("AccountScreen Loaded");
+      if (loggedInUser) console.log("User:", loggedInUser);
+      if (isAdmin !== undefined) console.log("Is Admin:", isAdmin);
 
-        console.log("Is user Admin :" , isAdmin);
+      return () => {
+        console.log("AccountScreen Unloaded"); // Clean-up when screen loses focus
+      };
+    }, [loggedInUser, isAdmin])
+  );
 
-        const [state, setState] = useState({
-            mobileNumber: '123456789',
-            name: '',
-            logout: false,
-        })
+  const menuItems = [
+    {
+      title: "Customer Information",
+      icon: <User size={24} color="#10857F" />,
+      screen: "adminPanel/CustomerInformationScreen",
+    },
+    {
+      title: "Order Status Change",
+      icon: <ListChecks size={24} color="#10857F" />,
+      screen: "adminPanel/OrderStatusChangeScreen",
+    },
+    {
+      title: "Create Order",
+      icon: <PlusCircle size={24} color="#10857F" />,
+      screen: "adminPanel/CreateOrderAdminScreen",
+    },
+    {
+      title: "Upload All Stock",
+      icon: <Upload size={24} color="#10857F" />,
+      screen: "adminPanel/UploadAllStockScreen",
+    },
+    {
+      title: "Payments Information",
+      icon: <CreditCard size={24} color="#10857F" />,
+      screen: "adminPanel/PaymentsInformationScreen",
+    },
+    {
+      title: "Invoice Information",
+      icon: <FileText size={24} color="#10857F" />,
+      screen: "adminPanel/InvoiceInformationScreen",
+    },
+    {
+      title: "Inventory Information",
+      icon: <Package size={24} color="#10857F" />,
+      screen: "adminPanel/InventoryInformationScreen",
+    },
+    {
+      title: "Chemist Discount Config",
+      icon: <Percent size={24} color="#10857F" />,
+      screen: "adminPanel/ChemistDiscountConfigScreen",
+    },
+    {
+      title: "Chemist Payment Option",
+      icon: <CreditCardIcon size={24} color="#10857F" />,
+      screen: "adminPanel/ChemistPaymentOptionScreen",
+    },
+    {
+      title: "Order Information",
+      icon: <Info size={24} color="#10857F" />,
+      screen: "adminPanel/OrderInformationScreen",
+    },
+    {
+      title: "Grace Period Setting",
+      icon: <Clock size={24} color="#10857F" />,
+      screen: "adminPanel/GracePeriodSettingScreen",
+    },
+    {
+      title: "Targets Setting",
+      icon: <Target size={24} color="#10857F" />,
+      screen: "adminPanel/TargetsSettingScreen",
+    },
+    {
+      title: "License Approval",
+      icon: <Target size={24} color="#10857F" />,
+      screen: "adminPanel/DrugLicenseApprovalScreen",
+    },
+    {
+      title: "Admin Product",
+      icon: <Target size={24} color="#10857F" />,
+      screen: "adminPanel/AdminProductScreen",
+    },
+  ];
 
-        //const updateState = (data) => setState((state) => ({ ...state, ...data }))
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <MaterialIcons
+          name="arrow-back"
+          size={24}
+          color="white"
+          onPress={() => navigation.goBack()}
+        />
+        <Text style={styles.headerText}>Admin Panel</Text>
+      </View>
 
-        const {
-            mobileNumber,
-            name,
-            logout,
-        } = state;
-
-        function adminPanelButton(title, icon, screenName) {
-            return (
-                <TouchableOpacity
-                    activeOpacity={0.6}
-                    onPress={() => navigation.push(screenName)}
-                    style={styles.adminPanelButtonStyle}>
-
-                    {/* {icon}
-                    <Text style={{ ...Fonts.primaryColor19Medium, marginLeft: 10 }}>
-                        {title}
-                    </Text>
-                    */}
-                    {/* Left Arrow Icon */}
-
-
-                    {/* Icon inside Circle */}
-                    <View style={styles.iconContainer}>{icon}</View>
-
-                    {/* Title */}
-                    <Text style={styles.title}>{title}</Text>
-                    <ChevronRight size={24} color="#0B678C" style={styles.leftArrow} />
-
-                    {/* Bottom Separator */}
-                    <View style={styles.separator} />
-                </TouchableOpacity>
-            )
-        }
-
-        return (
-            <View style={{ flex: 1, backgroundColor: "white" }}>
-                <View style={{ flex: 1 }}>
-                    {header()}
-                    <TouchableOpacity
-                        activeOpacity={0.6}
-                        onPress={() => navigation.navigate('home/homeScreen')}
-                    >
-                        <Text style={{ ...Fonts.whiteColor16Regular }}>
-                            Save
-                        </Text>
-                    </TouchableOpacity>
-                    <ScrollView automaticallyAdjustKeyboardInsets={true} showsVerticalScrollIndicator={false} style={styles.container}>
-                        {/* {nameAndMobileNumberInfo()}
-                        {activeOrderButton()}
-                        {logoutButton()} */}
-                        {/* <Text style={styles.heading}>Admin Panel</Text> */}
-
-                        {adminPanelButton("Customer Information", <User size={24} color="#0B678C" />, "adminPanel/CustomerInformationScreen")}
-                        {adminPanelButton("Order Status Change", <ListChecks size={24} color="#0B678C" />, "adminPanel/OrderStatusChangeScreen")}
-                        {adminPanelButton("Create Order", <PlusCircle size={24} color="#0B678C" />, "adminPanel/CreateOrderAdminScreen")}
-                        {adminPanelButton("Upload All Stock", <Upload size={24} color="#0B678C" />, "adminPanel/UploadAllStockScreen")}
-                        {adminPanelButton("Payments Information", <CreditCard size={24} color="#0B678C" />, "adminPanel/PaymentsInformationScreen")}
-                        {adminPanelButton("Invoice Information", <FileText size={24} color="#0B678C" />, "adminPanel/InvoiceInformationScreen")}
-                        {adminPanelButton("Inventory Information", <Package size={24} color="#0B678C" />, "adminPanel/InventoryInformationScreen")}
-                        {adminPanelButton("Chemist Discount Config", <Percent size={24} color="#0B678C" />, "adminPanel/ChemistDiscountConfigScreen")}
-                        {adminPanelButton("Chemist Payment Option", <CreditCardIcon size={24} color="#0B678C" />, "adminPanel/ChemistPaymentOptionScreen")}
-                        {adminPanelButton("Order Information", <Info size={24} color="#0B678C" />, "adminPanel/OrderInformationScreen")}
-                        {adminPanelButton("Grace Period Setting", <Clock size={24} color="#0B678C" />, "adminPanel/GracePeriodSettingScreen")}
-                        {adminPanelButton("Targets Setting", <Target size={24} color="#0B678C" />, "adminPanel/TargetsSettingScreen")}
-                        {adminPanelButton("License Approval", <Target size={24} color="#0B678C" />, "adminPanel/DrugLicenseApprovalScreen")}
-                        {adminPanelButton("Admin Product", <Target size={24} color="#0B678C" />, "adminPanel/AdminProductScreen")}
-                    </ScrollView>
-
-                    {logoutDialog()}
-                </View>
-            </View>
-        )
-
-        function logoutDialog() {
-            return (
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={logout}
-                    onRequestClose={() => {
-                        updateState({ logout: false })
-                    }}
-                >
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={() => {
-                            updateState({ logout: false })
-                        }}
-                        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-                    >
-                        <View style={{ justifyContent: "center", flex: 1 }}>
-                            <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => { }}
-                                style={{ ...styles.logoutDialogWrapStyle }}
-                            >
-                                <Text style={{
-                                    ...Fonts.blackColor19Medium,
-                                    paddingBottom: Sizes.fixPadding + 10.0
-                                }}>
-                                    Are You sure want to logout?
-                                </Text>
-                                <View style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    marginHorizontal: Sizes.fixPadding * 2.0,
-                                }}>
-                                    <TouchableOpacity
-                                        activeOpacity={0.6}
-                                        onPress={() => updateState({ logout: false })}
-                                        style={styles.cancelButtonStyle}>
-                                        <Text style={{ ...Fonts.primaryColor18Medium }}>
-                                            Cancel
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        activeOpacity={0.6}
-                                        onPress={() => {
-                                            updateState({ logout: false })
-                                            navigation.push('auth/signinScreen')
-                                        }}
-                                        style={styles.dialogLogoutButtonStyle}
-                                    >
-                                        <Text style={{ ...Fonts.whiteColor18Medium }}>
-                                            Logout
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
-            )
-        }
-
-        function logoutButton() {
-            return (
-                <TouchableOpacity
-                    activeOpacity={0.6}
-                    onPress={() => updateState({ logout: true })}
-                    style={styles.logoutButtonStyle}>
-                    <Text style={{ ...Fonts.primaryColor19Medium }}>
-                        Logout
-                    </Text>
-                </TouchableOpacity>
-            )
-        }
-
-        function activeOrderButton() {
-            return (
-                <TouchableOpacity
-                    activeOpacity={0.6}
-                    onPress={() => navigation.push('activeOrders/activeOrdersScreen')}
-                    style={styles.activeOrderButtonStyle}
-                >
-                    <Text style={{ ...Fonts.whiteColor19Medium }}>
-                        Active Orders
-                    </Text>
-                </TouchableOpacity>
-            )
-        }
-
-
-        function nameAndMobileNumberInfo() {
-            return (
-                <View style={{
-                    backgroundColor: Colors.whiteColor,
-                    paddingVertical: Sizes.fixPadding * 2.0,
-                }}>
-                    {nameTextField()}
-                    {mobileNumberTextField()}
-                </View>
-            )
-        }
-
-        function mobileNumberTextField() {
-            return (
-                <TextInput
-                    label="Mobile Number"
-                    value={mobileNumber}
-                    onChangeText={(text) => updateState({ mobileNumber: text })}
-                    mode="outlined"
-                    style={{
-                        height: 50.0,
-                        ...Fonts.primaryColor17Medium,
-                        backgroundColor: Colors.whiteColor,
-                        marginHorizontal: Sizes.fixPadding * 2.0,
-                    }}
-                    outlineColor={Colors.grayColor}
-                    selectionColor={Colors.primaryColor}
-                    theme={{ colors: { primary: Colors.primaryColor, underlineColor: '#C5C5C5', } }}
-                    keyboardType="phone-pad"
-                />
-            )
-        }
-
-        function nameTextField() {
-            return (
-                <TextInput
-                    label="Name"
-                    mode="outlined"
-                    value={name}
-                    onChangeText={(text) => updateState({ name: text })}
-                    style={{
-                        height: 50.0,
-                        ...Fonts.primaryColor17Medium,
-                        backgroundColor: Colors.whiteColor,
-                        marginHorizontal: Sizes.fixPadding * 2.0,
-                        marginBottom: Sizes.fixPadding,
-                    }}
-                    outlineColor={Colors.grayColor}
-                    selectionColor={Colors.primaryColor}
-                    theme={{ colors: { primary: Colors.primaryColor, underlineColor: '#C5C5C5', } }}
-                />
-            )
-        }
-
-        function header() {
-            return (
-                <View style={styles.headerWrapStyle}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <MaterialIcons
-                name="arrow-back"
-                size={24}
-                color={Colors.whiteColor}
-                onPress={() => navigation.goBack()}
-            />
-            <Text
-                style={{
-                ...Fonts.whiteColor19Medium,
-                marginLeft: Sizes.fixPadding + 5.0,
-                }}
-            >
-                Admin Panel
-            </Text>
-            </View>
-            {/* <MaterialIcons
-            name="search"
-            size={24}
-            color={Colors.whiteColor}
-            onPress={() => navigation.push("search/searchScreen")}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Profile Card */}
+        <Card style={styles.profileCard}>
+          <View style={styles.profileSection}>
+            {/* <Image
+              source={{ uri: "https://via.placeholder.com/100" }}
+              style={styles.profileImage}
             /> */}
+            <Text style={styles.name}>John Doe</Text>
+            <Text style={styles.email}>johndoe@example.com</Text>
+          </View>
+          <View style={styles.infoSection}>
+            <Text style={styles.infoText}>📞 +1 234 567 890</Text>
+            <Text style={styles.infoText}>🏠 123 Main St, City, Country</Text>
+          </View>
+        </Card>
+
+        {/* Admin Menu List */}
+        {menuItems.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.menuItem}
+            onPress={() => navigation.navigate(item.screen)}
+          >
+            <View style={styles.menuIcon}>{item.icon}</View>
+            <Text style={styles.menuText}>{item.title}</Text>
+            <ChevronRight size={24} color="#10857F" />
+          </TouchableOpacity>
+        ))}
+
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => setLogoutVisible(true)}
+        >
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Logout Modal */}
+      <Modal
+        animationType="slide"
+        transparent
+        visible={logoutVisible}
+        onRequestClose={() => setLogoutVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>
+              Are you sure you want to logout?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setLogoutVisible(false)}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={() => navigation.push("auth/signinScreen")}
+              >
+                <Text style={styles.confirmText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-            )
-        }
-    }
+      </Modal>
+    </View>
+  );
+};
 
-    const styles = StyleSheet.create({
-        headerWrapStyle: {
-            backgroundColor: Colors.primaryColor,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: 56.0,
-            paddingHorizontal: Sizes.fixPadding * 2.0,
-        },
-        activeOrderButtonStyle: {
-            backgroundColor: Colors.primaryColor,
-            paddingVertical: Sizes.fixPadding,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: Sizes.fixPadding,
-            margin: Sizes.fixPadding * 2.0,
-        },
-        logoutButtonStyle: {
-            backgroundColor: Colors.whiteColor,
-            borderColor: Colors.primaryColor,
-            borderWidth: 1.0,
-            borderRadius: Sizes.fixPadding,
-            paddingVertical: Sizes.fixPadding,
-            marginHorizontal: Sizes.fixPadding * 2.0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: Sizes.fixPadding * 2.0,
-        },
-        cancelButtonStyle: {
-            backgroundColor: '#E0E0E0',
-            borderRadius: Sizes.fixPadding - 5.0,
-            paddingVertical: Sizes.fixPadding - 5.0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flex: 1.0,
-            marginRight: Sizes.fixPadding,
-        },
-        dialogLogoutButtonStyle: {
-            backgroundColor: Colors.primaryColor,
-            borderRadius: Sizes.fixPadding - 5.0,
-            paddingVertical: Sizes.fixPadding - 5.0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flex: 1.0,
-            marginLeft: Sizes.fixPadding,
-        },
-        logoutDialogWrapStyle: {
-            width: width - 80.0,
-            backgroundColor: Colors.whiteColor,
-            borderRadius: Sizes.fixPadding,
-            alignItems: 'center',
-            padding: Sizes.fixPadding * 2.0,
-            alignSelf: 'center'
-        },
-        animatedView: {
-            backgroundColor: "#333333",
-            position: "absolute",
-            bottom: 0,
-            alignSelf: 'center',
-            borderRadius: Sizes.fixPadding + 5.0,
-            paddingHorizontal: Sizes.fixPadding + 5.0,
-            paddingVertical: Sizes.fixPadding,
-            justifyContent: "center",
-            alignItems: "center",
-        },
-        container: {
-            flex: 1,
-            backgroundColor: "#fff", // Optional: Ensures a clean background
-            // paddingHorizontal: 20,
-        },
-        heading: {
-            fontSize: 32,
-            fontWeight: "bold",
-            color: "#0B678C",
-            textAlign: "left", // Change to "center" if needed
-            // marginVertical: 30,
-            backgroundColor: "#E0F4FF",
-            paddingHorizontal: 30,
-            paddingVertical: 40,
-            marginBottom: 10
+// Updated Styles
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#f4f4f4" },
+  header: {
+    backgroundColor: "#10857F",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+  },
+  headerText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginLeft: 10,
+  },
+  scrollContainer: { paddingBottom: 30 },
 
-        },
-        adminPanelButtonStyle: {
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 20,
-            paddingHorizontal: 20,
-            position: "relative",
-        },
-        leftArrow: {
-            marginRight: 10, // Spacing between arrow and icon
-        },
-        iconContainer: {
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#E0F4FF", // Lighter shade of #0B678C
-            justifyContent: "center",
-            alignItems: "center",
-        },
-        title: {
-            flex: 1,
-            fontSize: 19,
-            color: "#0B678C",
-            marginLeft: 10,
-        },
-        separator: {
-            height: 1,
-            backgroundColor: "#ccc", // Light grey separator
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            marginHorizontal: 20,
-        },
-    });
+  profileCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
+    margin: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    elevation: 4,
+  },
+  profileSection: { alignItems: "center" },
+  profileImage: { width: 80, height: 80, borderRadius: 40, marginBottom: 10 },
+  name: { fontSize: 18, fontWeight: "bold", color: "#333" },
+  email: { fontSize: 14, color: "#777" },
+  infoSection: { marginTop: 10 },
+  infoText: { fontSize: 14, color: "#555", marginVertical: 2 },
 
-    export default AccountScreen;
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    padding: 15,
+    marginVertical: 5,
+    borderRadius: 10,
+    marginHorizontal: 15,
+    shadowColor: "#000",
+    elevation: 2,
+  },
+  menuIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E0F4FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  menuText: { flex: 1, fontSize: 16, color: "#333" },
+
+  logoutButton: {
+    backgroundColor: "#d9534f",
+    padding: 15,
+    margin: 20,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  logoutText: { color: "white", fontSize: 16, fontWeight: "bold" },
+});
+
+export default AccountScreen;

@@ -1,13 +1,12 @@
-import { Tabs } from 'expo-router';
+import { Tabs } from "expo-router";
 import React, { useState, useCallback } from "react";
-import { BackHandler, View, Text, StyleSheet, Pressable } from 'react-native'
-import { MaterialIcons } from '@expo/vector-icons';
+import { BackHandler, View, Text, StyleSheet, Pressable } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Colors, Sizes, Fonts } from "../../constant/styles";
 import { useFocusEffect } from "@react-navigation/native";
 import MyStatusBar from "../../component/myStatusBar";
 
 export default function TabLayout() {
-
   const backAction = () => {
     backClickCount == 1 ? BackHandler.exitApp() : _spring();
     return true;
@@ -25,8 +24,8 @@ export default function TabLayout() {
   function _spring() {
     setBackClickCount(1);
     setTimeout(() => {
-      setBackClickCount(0)
-    }, 1000)
+      setBackClickCount(0);
+    }, 1000);
   }
 
   const [backClickCount, setBackClickCount] = useState(0);
@@ -41,7 +40,7 @@ export default function TabLayout() {
           tabBarInactiveTintColor: Colors.grayColor,
           tabBarLabelStyle: {
             fontSize: 14.0,
-            fontFamily: 'Mukta_Regular',
+            fontFamily: "Mukta_Regular",
           },
           tabBarStyle: { ...styles.tabBarStyle },
           tabBarHideOnKeyboard: true,
@@ -56,31 +55,43 @@ export default function TabLayout() {
         }}
       >
         <Tabs.Screen
-          name='home/homeScreen'
+          name="home/homeScreen"
           options={{
-            tabBarIcon: ({ color }) => <MaterialIcons name="home" size={27} color={color} />,
-            tabBarLabel: 'Home'
+            shallow: true,
+            keepStatic: true,
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="home" size={27} color={color} />
+            ),
+            tabBarLabel: "Home",
           }}
         />
         <Tabs.Screen
-          name='search/searchScreen'
+          name="search/searchScreen"
           options={{
-            tabBarIcon: ({ color }) => <MaterialIcons name="search" size={27} color={color} />,
-            tabBarLabel: 'Search'
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="search" size={27} color={color} />
+            ),
+            tabBarLabel: "Search",
           }}
         />
         <Tabs.Screen
-          name='notifications/notificationsScreen'
+          name="notifications/notificationsScreen"
           options={{
-            tabBarIcon: ({ color }) => <MaterialIcons name="notifications" size={27} color={color} />,
-            tabBarLabel: 'Notifications'
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="notifications" size={27} color={color} />
+            ),
+            tabBarLabel: "Notifications",
           }}
         />
         <Tabs.Screen
-          name='account/accountScreen'
+          name="account/accountScreen"
           options={{
-            tabBarIcon: ({ color }) => <MaterialIcons name="person" size={27} color={color} />,
-            tabBarLabel: 'Account'
+            shallow: true,
+            keepStatic: true,
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="person" size={27} color={color} />
+            ),
+            tabBarLabel: "Account",
           }}
         />
       </Tabs>
@@ -89,26 +100,22 @@ export default function TabLayout() {
   );
 
   function exitInfo() {
-    return (
-      backClickCount == 1
-        ?
-        <View style={styles.animatedView}>
-          <Text style={{ ...Fonts.whiteColor15Regular }}>
-            Press back once again to exit
-          </Text>
-        </View>
-        :
-        null
-    )
+    return backClickCount == 1 ? (
+      <View style={styles.animatedView}>
+        <Text style={{ ...Fonts.whiteColor15Regular }}>
+          Press back once again to exit
+        </Text>
+      </View>
+    ) : null;
   }
 }
 
 const styles = StyleSheet.create({
   animatedView: {
-    backgroundColor: '#333333',
+    backgroundColor: "#333333",
     position: "absolute",
     bottom: 20,
-    alignSelf: 'center',
+    alignSelf: "center",
     borderRadius: Sizes.fixPadding * 2.0,
     paddingHorizontal: Sizes.fixPadding + 5.0,
     paddingVertical: Sizes.fixPadding,
@@ -118,7 +125,7 @@ const styles = StyleSheet.create({
   tabBarStyle: {
     height: 70.0,
     elevation: 3.0,
-    borderColor: '#cccccc',
+    borderColor: "#cccccc",
     borderTopWidth: 1.0,
     borderLeftWidth: 1.0,
     borderRightWidth: 1.0,
@@ -127,5 +134,5 @@ const styles = StyleSheet.create({
     paddingTop: Sizes.fixPadding - 5.0,
     paddingBottom: Sizes.fixPadding - 5.0,
     backgroundColor: Colors.whiteColor,
-  }
-})
+  },
+});

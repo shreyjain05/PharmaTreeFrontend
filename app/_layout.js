@@ -1,17 +1,15 @@
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { AppState, LogBox, StatusBar } from 'react-native';
-import AppProvider from './context/AppProvider'
-
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { AppState, LogBox, StatusBar } from "react-native";
+import AppProvider from "./context/AppProvider";
 
 LogBox.ignoreAllLogs();
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-
   const [loaded] = useFonts({
     Mukta_Light: require("../assets/fonts/mukta/Mukta-Light.ttf"),
     Mukta_Medium: require("../assets/fonts/mukta/Mukta-Medium.ttf"),
@@ -36,9 +34,14 @@ export default function RootLayout() {
 
   return (
     <AppProvider>
-      <Stack screenOptions={{ headerShown: false, animation: 'ios_from_right' }}>
+      <Stack
+        screenOptions={{ headerShown: false, animation: "ios_from_right" }}
+      >
         <Stack.Screen name="index" />
-        <Stack.Screen name="auth/signinScreen" options={{ gestureEnabled: false }} />
+        <Stack.Screen
+          name="auth/signinScreen"
+          options={{ gestureEnabled: false }}
+        />
         <Stack.Screen name="auth/registerScreen" />
         <Stack.Screen name="auth/verificationScreen" />
         <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
