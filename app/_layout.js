@@ -76,7 +76,7 @@ export default function RootLayout() {
         <Stack.Screen name="adminPanel/GracePeriodSettingScreen" />
         <Stack.Screen name="adminPanel/TargetsSettingScreen" />
         <Stack.Screen name="adminPanel/DrugLicenseApprovalScreen" />
-        <Stack.Screen name="adminPanel/AdminProductScreen" />
+        <Stack.Screen name="adminPanel/AddProductScreen" />
         <Stack.Screen name="allProducts/allProducts" />
       </Stack>
     </AppProvider>

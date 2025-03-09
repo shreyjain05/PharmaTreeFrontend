@@ -65,6 +65,11 @@ const AccountScreen = () => {
           icon: <PlusCircle size={24} color="#10857F" />,
           screen: "adminPanel/CreateOrderAdminScreen",
         },
+        {
+          title: "Orders",
+          icon: <PlusCircle size={24} color="#10857F" />,
+          screen: "adminPanel/OrderInformationScreen",
+        },
       ],
     },
     {
@@ -81,9 +86,9 @@ const AccountScreen = () => {
           screen: "adminPanel/InventoryInformationScreen",
         },
         {
-          title: "Admin Product",
+          title: "Add Product",
           icon: <Target size={24} color="#10857F" />,
-          screen: "adminPanel/AdminProductScreen",
+          screen: "adminPanel/AddProductScreen",
         },
       ],
     },
@@ -95,35 +100,15 @@ const AccountScreen = () => {
           icon: <CreditCard size={24} color="#10857F" />,
           screen: "adminPanel/PaymentsInformationScreen",
         },
-        {
-          title: "Invoice Information",
-          icon: <FileText size={24} color="#10857F" />,
-          screen: "adminPanel/InvoiceInformationScreen",
-        },
-        {
-          title: "Chemist Payment Option",
-          icon: <CreditCardIcon size={24} color="#10857F" />,
-          screen: "adminPanel/ChemistPaymentOptionScreen",
-        },
       ],
     },
     {
       title: "Settings & Configurations",
       items: [
         {
-          title: "Chemist Discount Config",
-          icon: <Percent size={24} color="#10857F" />,
-          screen: "adminPanel/ChemistDiscountConfigScreen",
-        },
-        {
           title: "Grace Period Setting",
           icon: <Clock size={24} color="#10857F" />,
           screen: "adminPanel/GracePeriodSettingScreen",
-        },
-        {
-          title: "Targets Setting",
-          icon: <Target size={24} color="#10857F" />,
-          screen: "adminPanel/TargetsSettingScreen",
         },
         {
           title: "License Approval",
