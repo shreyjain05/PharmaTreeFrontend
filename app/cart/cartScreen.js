@@ -12,6 +12,7 @@ import {
   Dimensions,
   Platform,
   KeyboardAvoidingView,
+  Card,
 } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -112,35 +113,76 @@ const CartScreen = () => {
           {emptyCartInfo()}
         </View>
       ) : (
-        <View style={{ flex: 1 }}>
+        <View style={styles.contentContainer}>
           <ScrollView
             showsVerticalScrollIndicator={true}
-            contentContainerStyle={{ paddingBottom: Sizes.fixPadding * 17.0 }}
+            contentContainerStyle={styles.scrollViewContent}
           >
             {cartItemsInfo()}
             {addMoreItemsInfo()}
-            <View style={{ marginBottom: Sizes.fixPadding * 10.0 }}>
-              {amountInfo()}
-            </View>
+            <View style={styles.amountInfoContainer}>{amountInfo()}</View>
           </ScrollView>
-          {/* Fixed at the bottom */}
-          <View style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
-            {deliverdAddressAndPaymentInfo()}
+          <View style={styles.bottomFixedContainer}>
+            {deliveredAddressAndPaymentInfo()}
           </View>
         </View>
       )}
-      {/* {selectQuantityDialog()} */}
       {deleteItemDialog()}
     </View>
   );
 
-  function emptyCartInfo() {
+  function cartItemsInfo() {
     return (
       <View>
-        <Text style={styles.emptyCartTextStyle}>{"Your Cart is Empty"}</Text>
+        {cartList.map((item) => (
+          <View key={item.id} style={styles.cardContainer}>
+            <Card style={styles.cartItemContainer}>
+              <Image
+                source={
+                  item.image
+                    ? { uri: item.image }
+                    : require("../../assets/images/defaultProduct.png")
+                }
+                style={styles.productImage}
+                resizeMode="contain"
+              />
+              <View style={styles.productDetails}>
+                <Text style={styles.productName}>{item.name}</Text>
+                <Text style={styles.productManufacturer}>
+                  BY {item.manufacturer}
+                </Text>
+                <Text style={styles.productDetail}>{item.detail}</Text>
+                <Text style={styles.productPrice}>₹{item.price}</Text>
+
+                <View style={styles.quantityContainer}>
+                  <TextInput
+                    style={styles.quantityInput}
+                    value={item.qty.toString()}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+              <MaterialIcons
+                name="delete"
+                size={24}
+                color={Colors.primaryColor}
+                style={styles.deleteIcon}
+                onPress={() => setDeleteDialog(true)}
+              />
+            </Card>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  function emptyCartInfo() {
+    return (
+      <View style={styles.emptyCartContainer}>
+        <Text style={styles.emptyCartText}>Your Cart is Empty</Text>
         <Image
           source={require("../../assets/images/empty_cart.png")}
-          style={styles.emptyCartImageStyle}
+          style={styles.emptyCartImage}
           resizeMode="contain"
         />
       </View>
@@ -211,10 +253,10 @@ const CartScreen = () => {
     );
   }
 
-  function deliverdAddressAndPaymentInfo() {
+  function deliveredAddressAndPaymentInfo() {
     return (
       <View style={styles.deliveryAndPaymentInfoWrapStyle}>
-        {deliveredAddresInfo()}
+        {deliveredAddressInfo()}
         {totalAmountAndPaymentButton()}
       </View>
     );
@@ -247,7 +289,7 @@ const CartScreen = () => {
     );
   }
 
-  function deliveredAddresInfo() {
+  function deliveredAddressInfo() {
     return (
       <View style={styles.deliveredAddresInfoWrapStyle}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -274,7 +316,7 @@ const CartScreen = () => {
                       ...Fonts.primaryColor17Regular,
                     }}
                   >
-                    Deliver to
+                    Deliver to :
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -733,21 +775,56 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   deliveredAddresInfoWrapStyle: {
-    backgroundColor: "#EEEEEE",
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    marginVertical: 10,
+  },
+  deliveredAddressIconStye: {
+    height: 50,
+    width: 50,
+    borderRadius: 25,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  addressContainer: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  addressHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: Sizes.fixPadding,
-    paddingBottom: Sizes.fixPadding,
-    paddingTop: Sizes.fixPadding - 5.0,
+    marginBottom: 4,
   },
-  deliveredAddressIconStye: {
-    height: 80.0,
-    backgroundColor: Colors.whiteColor,
-    width: 80.0,
-    borderRadius: 40.0,
+  addressRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  deliverToText: {
+    fontSize: 17,
+    color: "#333",
+    fontWeight: "400",
+  },
+  addressText: {
+    fontSize: 18,
+    color: "#000",
+    fontWeight: "500",
+    flexShrink: 1,
+    marginLeft: 5,
+  },
+  changeButton: {
+    fontSize: 20,
+    color: "#ff6600",
+    fontWeight: "500",
   },
   someTermsAndConditionsWrapStyle: {
     marginVertical: Sizes.fixPadding * 2.0,
@@ -893,6 +970,107 @@ const styles = StyleSheet.create({
     padding: Sizes.fixPadding * 1.5,
     paddingBottom: Sizes.fixPadding * 2.0,
     alignSelf: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bodyBackColor,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: Sizes.fixPadding * 2,
+    paddingTop: Sizes.fixPadding,
+  },
+  scrollViewContent: {
+    paddingBottom: Sizes.fixPadding * 17,
+  },
+  amountInfoContainer: {
+    marginBottom: Sizes.fixPadding * 10,
+    backgroundColor: Colors.whiteColor,
+    borderRadius: 10,
+    padding: Sizes.fixPadding * 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bottomFixedContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.whiteColor,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingVertical: Sizes.fixPadding * 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  cardContainer: {
+    paddingHorizontal: 15,
+    marginVertical: 10,
+  },
+  cartItemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  productImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  productDetails: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  productManufacturer: {
+    fontSize: 14,
+    color: "#777",
+    marginVertical: 2,
+  },
+  productDetail: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 5,
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ff6600",
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  quantityInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 35,
+    width: 50,
+    textAlign: "center",
+    fontSize: 16,
+  },
+  deleteIcon: {
+    marginLeft: 10,
   },
 });
 

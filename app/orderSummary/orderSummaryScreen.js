@@ -21,34 +21,52 @@ import MyStatusBar from "../../component/myStatusBar";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { AppContext } from "../context/AppProvider";
 import { Calendar } from "react-native-calendars";
+import BASE_URL from "../../constant/variable";
 import { Switch, RadioButton } from "react-native-paper";
 
 const { width, height } = Dimensions.get("screen");
 
-const someTermsAndConditionsList = [
-  {
-    id: "1",
-    text: "A Licensed pharmacy would be delivering your order basic availability of product & fastest delivery.",
-  },
-  {
-    id: "2",
-    text: "Prices are indicative and may change after billing.",
-  },
-  {
-    id: "3",
-    text: "HealthMeds is a technology platform to connect sellers and buyers and is not involved in sales of any product. Offer for sale on the products and services are provided/sold by the seller only.For detail Terms and Conditions.",
-  },
-];
+const someTermsAndConditionsList = [];
 
 const cartList = [];
 
 const orderSummaryScreen = () => {
   const navigation = useNavigation();
   const { loggedInUser } = useContext(AppContext);
+  const [applicationConfig, setApplicationConfig] = useState([]);
 
   console.log("user information: " + JSON.stringify(loggedInUser));
 
   const { shoppingList, setShoppingList } = useContext(AppContext);
+
+  useEffect(() => {
+    const fetchApplicationConfig = async () => {
+      console.log("inside grace period use effect");
+
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/applicationConfig`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch Configurations");
+        }
+        const data = await response.json();
+        console.log("data from config api is ", data);
+
+        // Transform API response to match DropDownPicker format
+        const appConfig = data.map((config) => ({
+          id: config.id,
+          name: config.name,
+          value: config.value, // Ensure value is a string
+        }));
+
+        console.log("Configs", appConfig);
+        setApplicationConfig(appConfig);
+      } catch (error) {
+        console.error("Error fetching Configurations:", error);
+      }
+    };
+
+    fetchApplicationConfig();
+  }, []);
 
   useEffect(() => {
     console.log("shoppingList in description:", shoppingList);
@@ -69,6 +87,7 @@ const orderSummaryScreen = () => {
     deliveryCharge: 5,
     deleteDialog: false,
     showBootomSheet: false,
+    discount: JSON.parse(loggedInUser.metaData).customerDiscount,
   });
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
@@ -81,6 +100,7 @@ const orderSummaryScreen = () => {
     deliveryCharge,
     deleteDialog,
     showBootomSheet,
+    discount,
   } = state;
 
   return (
@@ -118,183 +138,9 @@ const orderSummaryScreen = () => {
           </ScrollView>
         </View>
       )}
-      {selectQuantityDialog()}
       {deleteItemDialog()}
-      {addCouponBottonSheet()}
     </View>
   );
-
-  function addCouponBottonSheet() {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showBootomSheet}
-        onRequestClose={() => {
-          updateState({ showBootomSheet: false });
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => {
-            updateState({ showBootomSheet: false });
-          }}
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS == "ios" ? "height" : null}
-            style={{ justifyContent: "flex-end", flex: 1 }}
-          >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {}}
-              style={{ backgroundColor: Colors.whiteColor }}
-            >
-              <View style={styles.bottomSheetStyle}>
-                {applyCouponAndCancelButton()}
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-                    {couponCodeTextField()}
-                    {coupons()}
-                  </TouchableOpacity>
-                </ScrollView>
-              </View>
-            </TouchableOpacity>
-          </KeyboardAvoidingView>
-        </TouchableOpacity>
-      </Modal>
-    );
-  }
-
-  function coupons() {
-    return (
-      <>
-        {couponList.map((item, index) => (
-          <View key={`₹{item.id}`}>
-            <View
-              style={{
-                marginTop: Sizes.fixPadding + 10.0,
-                marginHorizontal: Sizes.fixPadding * 2.0,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={styles.couponProviderImageWrapStyle}>
-                    <Image
-                      source={item.image}
-                      style={{ height: 50.0, width: 110.0 }}
-                      resizeMode="contain"
-                    />
-                  </View>
-                  {item.isApply ? (
-                    <>
-                      <View
-                        style={{
-                          backgroundColor: Colors.orangeColor,
-                          height: 35.0,
-                          width: 1.0,
-                          marginHorizontal: Sizes.fixPadding,
-                        }}
-                      />
-                      <Text style={{ ...Fonts.orangeColor18Regular }}>
-                        {item.code}
-                      </Text>
-                    </>
-                  ) : null}
-                </View>
-                <Text
-                  style={{
-                    paddingRight: item.isApply ? 0.0 : Sizes.fixPadding * 2.0,
-                    paddingTop: Sizes.fixPadding,
-                    lineHeight: 23.0,
-                    ...Fonts.primaryColor19Medium,
-                  }}
-                >
-                  {item.isApply ? `Apply` : `No Code\nRequired`}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  paddingTop: Sizes.fixPadding + 2.0,
-                  lineHeight: 23.0,
-                  ...Fonts.primaryColor19Medium,
-                }}
-              >
-                {item.title}
-              </Text>
-              <Text style={{ lineHeight: 23.0, ...Fonts.primaryColor17Light }}>
-                {item.description}
-              </Text>
-              {item.isApply ? null : (
-                <Text style={{ ...Fonts.primaryColor17Medium }}>
-                  Expires In {item.expiresDays} days
-                </Text>
-              )}
-              {index == couponList.length - 1 ? null : (
-                <View
-                  style={{
-                    backgroundColor: Colors.primaryColor,
-                    height: 1.0,
-                    marginTop: Sizes.fixPadding + 5.0,
-                  }}
-                />
-              )}
-            </View>
-          </View>
-        ))}
-      </>
-    );
-  }
-
-  function couponCodeTextField() {
-    return (
-      <View
-        style={{
-          backgroundColor: "#EEEEEE",
-          paddingHorizontal: Sizes.fixPadding * 2.0,
-          paddingVertical: Sizes.fixPadding + 5.0,
-        }}
-      >
-        <TextInput
-          placeholder="Apply Coupon Code"
-          mode="outlined"
-          style={{
-            height: 50.0,
-            ...Fonts.primaryColor17Medium,
-            backgroundColor: Colors.whiteColor,
-          }}
-          placeholderTextColor={Colors.primaryColor}
-          right={
-            <TextInput.Affix
-              text="Apply"
-              textStyle={{ ...Fonts.primaryColor18Medium }}
-            />
-          }
-          selectionColor={Colors.primaryColor}
-          theme={{ colors: { primary: "#C5C5C5", underlineColor: "#C5C5C5" } }}
-        />
-      </View>
-    );
-  }
-
-  function applyCouponAndCancelButton() {
-    return (
-      <View style={styles.applyCouponAndCancelButtonWrapStyle}>
-        <Text style={{ ...Fonts.primaryColor20Medium }}>Apply Coupon</Text>
-        <MaterialIcons
-          name="close"
-          size={24}
-          color={Colors.primaryColor}
-          onPress={() => updateState({ showBootomSheet: false })}
-        />
-      </View>
-    );
-  }
 
   function emptyCartInfo() {
     return (
@@ -456,12 +302,19 @@ const orderSummaryScreen = () => {
 
   function getAmount() {}
 
+  function getConfig() {
+    const gracePeriodConfig = applicationConfig.find(
+      (config) => config.name === "Grace Period"
+    );
+    return gracePeriodConfig ? gracePeriodConfig.value : "30";
+  }
+
   function deliverdAddressAndPaymentInfo() {
-    const [payNow, setPayNow] = useState(false);
+    const [payNow, setPayNow] = useState(true);
     const [selectedPaymentOption, setSelectedPaymentOption] = useState("full");
 
     // Compute the amount based on selection
-    const totalAmount = total();
+    const totalAmount = total() - discountAmount();
     const payableAmount =
       selectedPaymentOption === "50"
         ? Math.round(totalAmount * 0.5)
@@ -472,10 +325,15 @@ const orderSummaryScreen = () => {
     return (
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Toggle for Pay Now / Pay Later */}
-        {total() > 4000 && (
+        {totalAmount > 4000 && (
           <View style={styles.paymentToggleContainer}>
             <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Now</Text>
-            <Switch value={payNow} onValueChange={() => setPayNow(!payNow)} />
+            <Switch
+              value={payNow}
+              onValueChange={() => setPayNow(!payNow)}
+              thumbColor={payNow ? "#10857F" : "#10857F"} // Always teal
+              trackColor={{ true: "#10857F" }} // Always teal when active
+            />
             <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Later</Text>
           </View>
         )}
@@ -492,16 +350,16 @@ const orderSummaryScreen = () => {
               value={selectedPaymentOption}
             >
               <View style={styles.radioButton}>
-                <RadioButton value="50" />
-                <Text>50% (₹{Math.round(total() * 0.5)})</Text>
+                <RadioButton value="50" color="#10857F" />
+                <Text>50% (₹{Math.round(totalAmount * 0.5)})</Text>
               </View>
               <View style={styles.radioButton}>
-                <RadioButton value="70" />
-                <Text>70% (₹{Math.round(total() * 0.7)})</Text>
+                <RadioButton value="70" color="#10857F" />
+                <Text>70% (₹{Math.round(totalAmount * 0.7)})</Text>
               </View>
               <View style={styles.radioButton}>
-                <RadioButton value="full" />
-                <Text>Full Amount (₹{total()})</Text>
+                <RadioButton value="full" color="#10857F" />
+                <Text>Full Amount (₹{totalAmount})</Text>
               </View>
             </RadioButton.Group>
           </View>
@@ -620,117 +478,18 @@ const orderSummaryScreen = () => {
     );
   }
 
-  function someTermsAndConditions() {
-    return (
-      <View style={styles.someTermsAndConditionsWrapStyle}>
-        {someTermsAndConditionsList.map((item) => (
-          <View key={`₹{item.id}`}>
-            <View style={{ flexDirection: "row" }}>
-              <View style={styles.termsAndConditionBulletStyle} />
-              <Text
-                style={{
-                  marginHorizontal: Sizes.fixPadding,
-                  ...Fonts.primaryColor18Regular,
-                  lineHeight: 24.0,
-                }}
-              >
-                {item.text}
-              </Text>
-            </View>
-          </View>
-        ))}
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() =>
-            navigation.push("termsAndConditions/termsAndConditionsScreen")
-          }
-        >
-          <Text
-            style={{
-              lineHeight: 24.0,
-              ...Fonts.primaryColor18Medium,
-              marginHorizontal: Sizes.fixPadding * 2.0,
-            }}
-          >
-            Terms and Conditions
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  function additionalNotesInfo() {
-    return (
-      <View style={styles.additionalNotesInfoWrapStyle}>
-        <Text style={{ ...Fonts.primaryColor19Medium }}>Additional Notes</Text>
-        <TextInput
-          placeholder="Enter any additional information regarding your order"
-          placeholderTextColor={Colors.grayColor}
-          style={{
-            ...Fonts.blackColor17Medium,
-            backgroundColor: Colors.whiteColor,
-            height: 100,
-          }}
-          multiline={true}
-          numberOfLines={4}
-          mode="outlined"
-          textAlignVertical="top"
-          selectionColor={Colors.primaryColor}
-          theme={{
-            colors: {
-              primary: Colors.primaryColor,
-              underlineColor: Colors.grayColor,
-            },
-          }}
-        />
-      </View>
-    );
-  }
-
-  function totalSavingsInfo() {
-    return (
-      <View style={styles.totalSavingInfoWrapStyle}>
-        <View style={styles.totalSavingInfoStyle}>
-          <View style={{ flexDirection: "row" }}>
-            <View style={styles.dollarIconWrapStyle}>
-              <MaterialCommunityIcons
-                name="currency-usd"
-                size={22}
-                color={Colors.whiteColor}
-              />
-            </View>
-            <View
-              style={{
-                width: width - 140.0,
-                marginLeft: Sizes.fixPadding,
-                marginTop: Sizes.fixPadding - 15.0,
-              }}
-            >
-              <Text
-                style={{
-                  paddingTop: Sizes.fixPadding,
-                  lineHeight: 23.0,
-                  ...Fonts.primaryColor19Medium,
-                }}
-              >
-                Total savings of ₹1 on this order
-              </Text>
-              <Text style={{ ...Fonts.primaryColor17Light }}>MRP Discount</Text>
-            </View>
-          </View>
-          <Text style={{ alignSelf: "flex-end", ...Fonts.primaryColor17Light }}>
-            ₹1
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   function total() {
     const total = cartItems.reduce((sum, i) => {
       return (sum += i.qty * i.price);
     }, 0);
     return total;
+  }
+
+  function discountAmount() {
+    const total = cartItems.reduce((sum, i) => {
+      return (sum += i.qty * i.price);
+    }, 0);
+    return (total * discount) / 100;
   }
 
   function getAddress() {
@@ -762,7 +521,17 @@ const orderSummaryScreen = () => {
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={{ ...Fonts.primaryColor18Regular }}>Cart Value</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={{ ...Fonts.primaryColor19Medium }}>{total()}</Text>
+            <Text style={{ ...Fonts.primaryColor19Medium }}>₹{total()}</Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ ...Fonts.primaryColor18Regular }}>
+            Customer Discount ({discount}%)
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ ...Fonts.primaryColor19Medium }}>
+              ₹{discountAmount()}
+            </Text>
           </View>
         </View>
         <DashedLine
@@ -783,263 +552,10 @@ const orderSummaryScreen = () => {
             Amount to be paid
           </Text>
           <Text style={{ ...Fonts.primaryColor19Medium }}>
-            ₹{total() + (total() > 10 ? 0 : 5)}
+            ₹{total() - discountAmount()}
           </Text>
         </View>
       </View>
-    );
-  }
-
-  function applyCouponButton() {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => updateState({ showBootomSheet: true })}
-        style={{
-          backgroundColor: Colors.whiteColor,
-          paddingHorizontal: Sizes.fixPadding * 2.0,
-          paddingVertical: Sizes.fixPadding * 2.0,
-        }}
-      >
-        <View style={styles.applyCouponWrapStyle}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image
-              source={require("../../assets/images/icons/icon_13.png")}
-              style={{ width: 25.0, height: 25.0 }}
-            />
-            <Text
-              style={{
-                marginLeft: Sizes.fixPadding,
-                ...Fonts.primaryColor19Medium,
-              }}
-            >
-              Apply Coupon
-            </Text>
-          </View>
-          <MaterialIcons
-            name="arrow-forward-ios"
-            size={20}
-            color={Colors.primaryColor}
-          />
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  function handPickedItemsInfo() {
-    const renderItem = ({ item }) => (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() =>
-          navigation.push("productDescription/productDescriptionScreen", {
-            item: JSON.stringify(item),
-            from: "home",
-          })
-        }
-      >
-        <View style={styles.handPickedItemsInfoWrapStyle}>
-          <Image
-            source={item.image}
-            style={{ width: 140.0, height: 140.0 }}
-            resizeMode="contain"
-          />
-          <View style={styles.percentageOffWrapStyle}>
-            <Text style={{ ...Fonts.whiteColor16Medium }}>
-              {item.percentageOff}% OFF
-            </Text>
-          </View>
-        </View>
-        <Text
-          numberOfLines={2}
-          style={{
-            marginTop: Sizes.fixPadding,
-            ...Fonts.blackColor19Medium,
-            width: 190.0,
-            lineHeight: 24.0,
-          }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            ...Fonts.primaryColor18Regular,
-            marginTop: Sizes.fixPadding - 15.0,
-          }}
-        >
-          {item.tabletsOrCapsulesCount} {item.type} in Bottle
-        </Text>
-        <View
-          style={{
-            marginTop: Sizes.fixPadding - 17.0,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ ...Fonts.primaryColor25Medium }}>₹{item.price}</Text>
-          <Text
-            style={{
-              ...Fonts.primaryColor18Light,
-              marginLeft: Sizes.fixPadding - 5.0,
-              textDecorationLine: "line-through",
-            }}
-          >
-            ₹{item.discountPrice}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-    return (
-      <View
-        style={{
-          marginVertical: Sizes.fixPadding * 2.0,
-          backgroundColor: Colors.whiteColor,
-        }}
-      >
-        <Text
-          style={{
-            ...Fonts.blackColor19Medium,
-            marginTop: Sizes.fixPadding + 3.0,
-            marginHorizontal: Sizes.fixPadding * 2.0,
-          }}
-        >
-          Handpicked Items for You
-        </Text>
-        <FlatList
-          horizontal
-          data={handPickedItemsList}
-          keyExtractor={(item) => `₹{item.id}`}
-          renderItem={renderItem}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingLeft: Sizes.fixPadding * 2.0,
-            paddingTop: Sizes.fixPadding,
-            paddingBottom: Sizes.fixPadding * 2.0,
-          }}
-        />
-      </View>
-    );
-  }
-
-  function addMoreItemsInfo() {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => navigation.push("orderMedicines/orderMedicinesScreen")}
-        style={styles.addMoreItemsInfoWrapStyle}
-      >
-        <Text style={{ ...Fonts.primaryColor19Medium }}>Add More Items</Text>
-        <View style={styles.addIconWrapStyle}>
-          <MaterialCommunityIcons
-            name="plus"
-            size={24}
-            color={Colors.primaryColor}
-          />
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  function selectQuantityDialog() {
-    return (
-      <Modal animationType="none" transparent={true} visible={quantityDialog}>
-        <TouchableWithoutFeedback>
-          <View style={styles.selectQuantityModelStyle}>
-            <View
-              style={{
-                width: width * 0.8,
-                backgroundColor: Colors.whiteColor,
-                borderRadius: Sizes.fixPadding,
-              }}
-            >
-              <View style={styles.selectQuantityTitleStyle}>
-                <Text style={{ ...Fonts.primaryColor20Medium }}>
-                  Select Quantity
-                </Text>
-                <MaterialIcons
-                  name="close"
-                  size={24}
-                  onPress={() => updateState({ quantityDialog: false })}
-                  color={Colors.primaryColor}
-                />
-              </View>
-              <View
-                style={{ backgroundColor: Colors.primaryColor, height: 1.0 }}
-              />
-              <TouchableOpacity
-                activeOpacity={0.6}
-                onPress={() => {
-                  removeItem();
-                  updateState({ quantityDialog: false });
-                }}
-              >
-                <Text
-                  style={{
-                    margin: Sizes.fixPadding,
-                    ...Fonts.primaryColor19Medium,
-                  }}
-                >
-                  Remove item
-                </Text>
-              </TouchableOpacity>
-              {quantity({ number: 1 })}
-              {quantity({ number: 2 })}
-              {quantity({ number: 3 })}
-              {quantity({ number: 4 })}
-              {quantity({ number: 5 })}
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    );
-  }
-
-  function changeQuantity({ quantity }) {
-    const newList = cartItems.map((product) => {
-      if (product.id === currentItemId) {
-        const updatedItem = { ...product, qty: quantity };
-        return updatedItem;
-      }
-      return product;
-    });
-    updateState({ cartItems: newList });
-  }
-
-  function quantity({ number }) {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => {
-          updateState({ currentQuantity: number });
-          changeQuantity({ quantity: number });
-          updateState({ quantityDialog: false });
-        }}
-        style={{
-          backgroundColor:
-            currentQuantity == number ? "#E2E2E2" : Colors.whiteColor,
-          borderBottomLeftRadius: number == 5 ? Sizes.fixPadding : 0.0,
-          borderBottomRightRadius: number == 5 ? Sizes.fixPadding : 0.0,
-          ...styles.selectedQuantityWrapStyle,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ ...Fonts.primaryColor19Medium }}>{number}</Text>
-          {number == 5 ? (
-            <Text
-              style={{
-                ...Fonts.primaryColor15Light,
-                marginLeft: Sizes.fixPadding,
-              }}
-            >
-              Max Qty
-            </Text>
-          ) : null}
-        </View>
-        {currentQuantity == number ? (
-          <View style={styles.doneIconWrapStyle}>
-            <MaterialIcons name="check" size={20} color={Colors.whiteColor} />
-          </View>
-        ) : null}
-      </TouchableOpacity>
     );
   }
 
@@ -1078,12 +594,12 @@ const orderSummaryScreen = () => {
       label: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#333",
+        color: "#10857F",
       },
       value: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#000",
+        color: "#10857F",
       },
     };
 
@@ -1145,30 +661,6 @@ const orderSummaryScreen = () => {
     updateState({ cartItems: filterArray });
   }
 
-  function freeDeliveryInfo() {
-    return (
-      <View style={styles.freeDeliveryInfoWrapStyle}>
-        <View style={styles.freeDeliveryInfoStyle}>
-          <Image
-            source={require("../../assets/images/icons/icon_12.png")}
-            style={{ width: 20.0, height: 20.0 }}
-          />
-          <Text
-            style={{
-              ...Fonts.primaryColor18Regular,
-              flex: 1,
-              lineHeight: 23.0,
-              paddingTop: Sizes.fixPadding - 2.0,
-              marginLeft: Sizes.fixPadding + 2.0,
-            }}
-          >
-            Free delivery with cart value above ₹10
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   function header() {
     return (
       <View style={styles.headerWrapStyle}>
@@ -1201,9 +693,11 @@ const orderSummaryScreen = () => {
       let payments = {};
       console.log("Todays date", today);
 
-      var currentAmount = total();
+      var currentAmount = total() - discountAmount();
       var discount = currentAmount * 0.05;
-      var increment = Math.round(discount / 45);
+      var graceDays = parseInt(getConfig());
+      console.log("Grace Days", graceDays);
+      var increment = Math.round(discount / graceDays);
 
       for (let i = 0; i <= 45; i++) {
         const date = new Date();
