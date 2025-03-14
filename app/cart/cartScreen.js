@@ -23,114 +23,6 @@ import { AppContext } from "../context/AppProvider";
 
 const { width, height } = Dimensions.get("screen");
 
-const handPickedItemsList = [
-  {
-    id: "h1",
-    image: require("../../assets/images/handpicked_item/handpicked_item_1.png"),
-    percentageOff: 50,
-    name: "Liveasy Wellness Multivitamin Tablets Bottle",
-    tabletsOrCapsulesCount: 60,
-    type: "Tablet(s)",
-    price: 6,
-    discountPrice: 12,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h2",
-    image: require("../../assets/images/handpicked_item/handpicked_item_2.png"),
-    percentageOff: 30,
-    name: "Liveasy Wellness Multi-vitamin Tablets Bottle",
-    tabletsOrCapsulesCount: 60,
-    type: "Tablet(s)",
-    price: 8,
-    discountPrice: 13,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h3",
-    image: require("../../assets/images/handpicked_item/handpicked_item_3.png"),
-    percentageOff: 55,
-    name: "Liveasy WellnessCalcium, Magnesium Tablets",
-    tabletsOrCapsulesCount: 60,
-    type: "Tablet(s)",
-    price: 7,
-    discountPrice: 15,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h4",
-    image: require("../../assets/images/handpicked_item/handpicked_item_4.png"),
-    percentageOff: 20,
-    name: "Everherb Moringa (drumsticks) 500mg ",
-    tabletsOrCapsulesCount: 60,
-    type: "Capsule(s)",
-    price: 4,
-    discountPrice: 6,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-  {
-    id: "h5",
-    image: require("../../assets/images/handpicked_item/handpicked_item_5.png"),
-    percentageOff: 10,
-    name: "Revital H- Daily Health Supplement - Capsules",
-    tabletsOrCapsulesCount: 30,
-    type: "Capsule(s)",
-    price: 4,
-    discountPrice: 5,
-    brand: "REVITAL",
-    manufacturer: "Sun Pharma",
-  },
-];
-
-const someTermsAndConditionsList = [
-  {
-    id: "1",
-    text: "A Licensed pharmacy would be delivering your order basic availability of product & fastest delivery.",
-  },
-  {
-    id: "2",
-    text: "Prices are indicative and may change after billing.",
-  },
-  {
-    id: "3",
-    text: "HealthMeds is a technology platform to connect sellers and buyers and is not involved in sales of any product. Offer for sale on the products and services are provided/sold by the seller only.For detail Terms and Conditions.",
-  },
-];
-
-const couponList = [
-  {
-    id: "1",
-    image: require("../../assets/images/offer_icon/amazon_pay.png"),
-    title: "Additional cashback upto ₹5 on Amaon pay | No coupon required",
-    description:
-      "Pay via Amazon Pay and get Min ₹1 to Max ₹5 cashback, Valid on min. transaction of ₹3.",
-    isApply: false,
-    expiresDays: 14,
-  },
-  {
-    id: "2",
-    image: require("../../assets/images/offer_icon/hsbc.jpg"),
-    title: "5% cashback on HSBC Credit card | No coupon code required",
-    description:
-      "5% additional cashback up to ₹3 on payment made via HSBC Credit card on a minimum transaction of ₹10",
-    isApply: false,
-    expiresDays: 13,
-  },
-  {
-    id: "3",
-    image: require("../../assets/images/offer_icon/curefit.png"),
-    title:
-      "Use code : CULTFIT5 | Get 5% OFF on Live Training Sessions with Curefit",
-    description: "5% OFF on Live Training Sessions with Curefit",
-    isApply: true,
-    code: "CULTFIT5",
-  },
-];
-
 const CartScreen = () => {
   const navigation = useNavigation();
   const { loggedInUser } = useContext(AppContext);
@@ -140,8 +32,7 @@ const CartScreen = () => {
   const { shoppingList, setShoppingList } = useContext(AppContext);
 
   useEffect(() => {
-          console.log("shoppingList in description:", shoppingList);
-  
+    console.log("shoppingList in description:", shoppingList);
   }, [shoppingList]);
 
   // Assuming `openedProduct` is passed via navigation params
@@ -151,59 +42,56 @@ const CartScreen = () => {
   const [cartList, setCartList] = useState(shoppingList);
   const [deleteDialog, setDeleteDialog] = useState(false);
   console.log("Received the products as:" + JSON.stringify(selectedInventory));
-  console.log("Received the products as in cart List:" + JSON.stringify(cartList));
+  console.log(
+    "Received the products as in cart List:" + JSON.stringify(cartList)
+  );
 
-   const [state, setState] = useState({
-     quantityDialog: false,
-     currentQuantity: null,
-     //cartItems: cartList,
-     //cartItems: selectedInventory,
-     currentItemId: "",
-     deliveryCharge: 5,
-     showBootomSheet: false,
-   });
+  const [state, setState] = useState({
+    quantityDialog: false,
+    currentQuantity: null,
+    //cartItems: cartList,
+    //cartItems: selectedInventory,
+    currentItemId: "",
+    deliveryCharge: 5,
+    showBootomSheet: false,
+  });
 
   const [inputQty, setInputQty] = useState("1");
-
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
 
   const {
-     quantityDialog,
-     currentQuantity,
-     //cartItems,
-     currentItemId,
-     deliveryCharge,
-     showBootomSheet,
- } = state;
+    quantityDialog,
+    currentQuantity,
+    //cartItems,
+    currentItemId,
+    deliveryCharge,
+    showBootomSheet,
+  } = state;
 
- function handleQuantityChange(id, quantity) {
-  console.log("Handle Received quantity :", quantity)
-  console.log("Handle Received id :", id)
-  setCartList((prevCartList) =>
-    prevCartList.map((item) =>
-      item.id === id ? { ...item, qty: quantity } : item
-    )
-  );
-
-  setShoppingList((prevShoppingList) => {
-    // Check if the product with the same ID & batch number already exists
-    const existingProduct = prevShoppingList.find(
-      (p) => p.id === id
+  function handleQuantityChange(id, quantity) {
+    console.log("Handle Received quantity :", quantity);
+    console.log("Handle Received id :", id);
+    setCartList((prevCartList) =>
+      prevCartList.map((item) =>
+        item.id === id ? { ...item, qty: quantity } : item
+      )
     );
 
-    if (existingProduct) {
-      // Product exists → Increase quantity
-      const updatedList = prevShoppingList.map((p) =>
-        p.id === id
-          ? { ...p, qty: quantity }
-          : p
-      );
-      console.log("Updated List:", updatedList);
-      return updatedList;
-    }
-  });
-}
+    setShoppingList((prevShoppingList) => {
+      // Check if the product with the same ID & batch number already exists
+      const existingProduct = prevShoppingList.find((p) => p.id === id);
+
+      if (existingProduct) {
+        // Product exists → Increase quantity
+        const updatedList = prevShoppingList.map((p) =>
+          p.id === id ? { ...p, qty: quantity } : p
+        );
+        console.log("Updated List:", updatedList);
+        return updatedList;
+      }
+    });
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
@@ -232,192 +120,19 @@ const CartScreen = () => {
             {cartItemsInfo()}
             {addMoreItemsInfo()}
             <View style={{ marginBottom: Sizes.fixPadding * 10.0 }}>
-      {amountInfo()} 
-    </View>
+              {amountInfo()}
+            </View>
           </ScrollView>
-         {/* Fixed at the bottom */}
-  <View style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
-    {deliverdAddressAndPaymentInfo()}
-  </View>
+          {/* Fixed at the bottom */}
+          <View style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
+            {deliverdAddressAndPaymentInfo()}
+          </View>
         </View>
       )}
       {/* {selectQuantityDialog()} */}
       {deleteItemDialog()}
-      {addCouponBottonSheet()}
     </View>
   );
-
-  function addCouponBottonSheet() {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showBootomSheet}
-        onRequestClose={() => {
-          updateState({ showBootomSheet: false });
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => {
-            updateState({ showBootomSheet: false });
-          }}
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS == "ios" ? "height" : null}
-            style={{ justifyContent: "flex-end", flex: 1 }}
-          >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {}}
-              style={{ backgroundColor: Colors.whiteColor }}
-            >
-              <View style={styles.bottomSheetStyle}>
-                {applyCouponAndCancelButton()}
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-                    {couponCodeTextField()}
-                    {coupons()}
-                  </TouchableOpacity>
-                </ScrollView>
-              </View>
-            </TouchableOpacity>
-          </KeyboardAvoidingView>
-        </TouchableOpacity>
-      </Modal>
-    );
-  }
-
-  function coupons() {
-    return (
-      <>
-        {couponList.map((item, index) => (
-          <View key={`₹{item.id}`}>
-            <View
-              style={{
-                marginTop: Sizes.fixPadding + 10.0,
-                marginHorizontal: Sizes.fixPadding * 2.0,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={styles.couponProviderImageWrapStyle}>
-                    <Image
-                      source={item.image}
-                      style={{ height: 50.0, width: 110.0 }}
-                      resizeMode="contain"
-                    />
-                  </View>
-                  {item.isApply ? (
-                    <>
-                      <View
-                        style={{
-                          backgroundColor: Colors.orangeColor,
-                          height: 35.0,
-                          width: 1.0,
-                          marginHorizontal: Sizes.fixPadding,
-                        }}
-                      />
-                      <Text style={{ ...Fonts.orangeColor18Regular }}>
-                        {item.code}
-                      </Text>
-                    </>
-                  ) : null}
-                </View>
-                <Text
-                  style={{
-                    paddingRight: item.isApply ? 0.0 : Sizes.fixPadding * 2.0,
-                    paddingTop: Sizes.fixPadding,
-                    lineHeight: 23.0,
-                    ...Fonts.primaryColor19Medium,
-                  }}
-                >
-                  {item.isApply ? `Apply` : `No Code\nRequired`}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  paddingTop: Sizes.fixPadding + 2.0,
-                  lineHeight: 23.0,
-                  ...Fonts.primaryColor19Medium,
-                }}
-              >
-                {item.title}
-              </Text>
-              <Text style={{ lineHeight: 23.0, ...Fonts.primaryColor17Light }}>
-                {item.description}
-              </Text>
-              {item.isApply ? null : (
-                <Text style={{ ...Fonts.primaryColor17Medium }}>
-                  Expires In {item.expiresDays} days
-                </Text>
-              )}
-              {index == couponList.length - 1 ? null : (
-                <View
-                  style={{
-                    backgroundColor: Colors.primaryColor,
-                    height: 1.0,
-                    marginTop: Sizes.fixPadding + 5.0,
-                  }}
-                />
-              )}
-            </View>
-          </View>
-        ))}
-      </>
-    );
-  }
-
-  function couponCodeTextField() {
-    return (
-      <View
-        style={{
-          backgroundColor: "#EEEEEE",
-          paddingHorizontal: Sizes.fixPadding * 2.0,
-          paddingVertical: Sizes.fixPadding + 5.0,
-        }}
-      >
-        <TextInput
-          placeholder="Apply Coupon Code"
-          mode="outlined"
-          style={{
-            height: 50.0,
-            ...Fonts.primaryColor17Medium,
-            backgroundColor: Colors.whiteColor,
-          }}
-          placeholderTextColor={Colors.primaryColor}
-          right={
-            <TextInput.Affix
-              text="Apply"
-              textStyle={{ ...Fonts.primaryColor18Medium }}
-            />
-          }
-          selectionColor={Colors.primaryColor}
-          theme={{ colors: { primary: "#C5C5C5", underlineColor: "#C5C5C5" } }}
-        />
-      </View>
-    );
-  }
-
-  function applyCouponAndCancelButton() {
-    return (
-      <View style={styles.applyCouponAndCancelButtonWrapStyle}>
-        <Text style={{ ...Fonts.primaryColor20Medium }}>Apply Coupon</Text>
-        <MaterialIcons
-          name="close"
-          size={24}
-          color={Colors.primaryColor}
-          onPress={() => updateState({ showBootomSheet: false })}
-        />
-      </View>
-    );
-  }
 
   function emptyCartInfo() {
     return (
@@ -428,87 +143,6 @@ const CartScreen = () => {
           style={styles.emptyCartImageStyle}
           resizeMode="contain"
         />
-      </View>
-    );
-  }
-
-  function searchInfo() {
-    return (
-      <View>
-        <Text style={{ ...Fonts.whiteColor16Medium }}>
-          Search medicines/healthcare products
-        </Text>
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() => navigation.push("search/searchScreen")}
-          style={styles.searchButtonStyle}
-        >
-          <MaterialIcons name="search" size={22} color={Colors.primaryColor} />
-          <Text
-            numberOfLines={1}
-            style={{
-              ...Fonts.primaryColor18Medium,
-              marginLeft: Sizes.fixPadding,
-              flex: 1,
-            }}
-          >
-            Search medicines/healthcare products
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  function offersProductsAndReturnsInfo() {
-    return (
-      <View style={styles.offersProductsAndReturnsInfoWrapStyle}>
-        {offersProductsAndReturns({
-          icon: (
-            <MaterialCommunityIcons
-              name="tag"
-              size={18}
-              color={Colors.whiteColor}
-            />
-          ),
-          description: "Flat \n15% Off",
-        })}
-        {offersProductsAndReturns({
-          icon: (
-            <MaterialIcons
-              name="security"
-              size={18}
-              color={Colors.whiteColor}
-            />
-          ),
-          description: "1 Lakh+\n Products",
-        })}
-        {offersProductsAndReturns({
-          icon: (
-            <MaterialCommunityIcons
-              name="layers-outline"
-              size={20}
-              color={Colors.whiteColor}
-            />
-          ),
-          description: "Easy \nReturns",
-        })}
-      </View>
-    );
-  }
-
-  function offersProductsAndReturns({ icon, description }) {
-    return (
-      <View style={{ flexDirection: "row" }}>
-        <View style={styles.offersProductsAndReturnsIconWrapStyle}>{icon}</View>
-        <Text
-          style={{
-            lineHeight: 23.0,
-            ...Fonts.whiteColor16Regular,
-            marginLeft: Sizes.fixPadding,
-          }}
-        >
-          {description}
-        </Text>
       </View>
     );
   }
@@ -650,19 +284,17 @@ const CartScreen = () => {
                       marginLeft: Sizes.fixPadding,
                       ...Fonts.primaryColor18Medium,
                     }}
-                  >
-                    Home (10001)
-                  </Text>
+                  ></Text>
                 </View>
               </View>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 activeOpacity={0.6}
                 onPress={() =>
                   navigation.push("selectAddress/selectAddressScreen")
                 }
               >
                 <Text style={{ ...Fonts.primaryColor20Medium }}>CHANGE</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
 
             <Text style={{ ...Fonts.primaryColor18Medium }}>
@@ -677,112 +309,6 @@ const CartScreen = () => {
     );
   }
 
-  function someTermsAndConditions() {
-    return (
-      <View style={styles.someTermsAndConditionsWrapStyle}>
-        {someTermsAndConditionsList.map((item) => (
-          <View key={`₹{item.id}`}>
-            <View style={{ flexDirection: "row" }}>
-              <View style={styles.termsAndConditionBulletStyle} />
-              <Text
-                style={{
-                  marginHorizontal: Sizes.fixPadding,
-                  ...Fonts.primaryColor18Regular,
-                  lineHeight: 24.0,
-                }}
-              >
-                {item.text}
-              </Text>
-            </View>
-          </View>
-        ))}
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() =>
-            navigation.push("termsAndConditions/termsAndConditionsScreen")
-          }
-        >
-          <Text
-            style={{
-              lineHeight: 24.0,
-              ...Fonts.primaryColor18Medium,
-              marginHorizontal: Sizes.fixPadding * 2.0,
-            }}
-          >
-            Terms and Conditions
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  function additionalNotesInfo() {
-    return (
-      <View style={styles.additionalNotesInfoWrapStyle}>
-        <Text style={{ ...Fonts.primaryColor19Medium }}>Additional Notes</Text>
-        <TextInput
-          placeholder="Enter any additional information regarding your order"
-          placeholderTextColor={Colors.grayColor}
-          style={{
-            ...Fonts.blackColor17Medium,
-            backgroundColor: Colors.whiteColor,
-            height: 100,
-          }}
-          multiline={true}
-          numberOfLines={4}
-          mode="outlined"
-          textAlignVertical="top"
-          selectionColor={Colors.primaryColor}
-          theme={{
-            colors: {
-              primary: Colors.primaryColor,
-              underlineColor: Colors.grayColor,
-            },
-          }}
-        />
-      </View>
-    );
-  }
-
-  function totalSavingsInfo() {
-    return (
-      <View style={styles.totalSavingInfoWrapStyle}>
-        <View style={styles.totalSavingInfoStyle}>
-          <View style={{ flexDirection: "row" }}>
-            <View style={styles.dollarIconWrapStyle}>
-              <MaterialCommunityIcons
-                name="currency-usd"
-                size={22}
-                color={Colors.whiteColor}
-              />
-            </View>
-            <View
-              style={{
-                width: width - 140.0,
-                marginLeft: Sizes.fixPadding,
-                marginTop: Sizes.fixPadding - 15.0,
-              }}
-            >
-              <Text
-                style={{
-                  paddingTop: Sizes.fixPadding,
-                  lineHeight: 23.0,
-                  ...Fonts.primaryColor19Medium,
-                }}
-              >
-                Total savings of ₹1 on this order
-              </Text>
-              <Text style={{ ...Fonts.primaryColor17Light }}>MRP Discount</Text>
-            </View>
-          </View>
-          <Text style={{ alignSelf: "flex-end", ...Fonts.primaryColor17Light }}>
-            ₹1
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   function total() {
     const total = cartList.reduce((sum, i) => {
       return (sum += i.qty * i.price);
@@ -791,14 +317,12 @@ const CartScreen = () => {
   }
 
   function handleProductDelete(id) {
-    console.log("Handle Deleted Received id :", id)
+    console.log("Handle Deleted Received id :", id);
     setDeleteDialog(true);
-    setCartList((prevCartList) =>
-      prevCartList.filter((item) => item.id !== id) // Removes the matching product
+    setCartList(
+      (prevCartList) => prevCartList.filter((item) => item.id !== id) // Removes the matching product
     );
   }
-
-  
 
   function getAddress() {
     return (
@@ -857,136 +381,6 @@ const CartScreen = () => {
     );
   }
 
-  function applyCouponButton() {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => updateState({ showBootomSheet: true })}
-        style={{
-          backgroundColor: Colors.whiteColor,
-          paddingHorizontal: Sizes.fixPadding * 2.0,
-          paddingVertical: Sizes.fixPadding * 2.0,
-        }}
-      >
-        <View style={styles.applyCouponWrapStyle}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image
-              source={require("../../assets/images/icons/icon_13.png")}
-              style={{ width: 25.0, height: 25.0 }}
-            />
-            <Text
-              style={{
-                marginLeft: Sizes.fixPadding,
-                ...Fonts.primaryColor19Medium,
-              }}
-            >
-              Apply Coupon
-            </Text>
-          </View>
-          <MaterialIcons
-            name="arrow-forward-ios"
-            size={20}
-            color={Colors.primaryColor}
-          />
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  function handPickedItemsInfo() {
-    const renderItem = ({ item }) => (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() =>
-          navigation.push("productDescription/productDescriptionScreen", {
-            item: JSON.stringify(item),
-            from: "home",
-          })
-        }
-      >
-        <View style={styles.handPickedItemsInfoWrapStyle}>
-          <Image
-            source={item.image}
-            style={{ width: 140.0, height: 140.0 }}
-            resizeMode="contain"
-          />
-          <View style={styles.percentageOffWrapStyle}>
-            <Text style={{ ...Fonts.whiteColor16Medium }}>
-              {item.percentageOff}% OFF
-            </Text>
-          </View>
-        </View>
-        <Text
-          numberOfLines={2}
-          style={{
-            marginTop: Sizes.fixPadding,
-            ...Fonts.blackColor19Medium,
-            width: 190.0,
-            lineHeight: 24.0,
-          }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            ...Fonts.primaryColor18Regular,
-            marginTop: Sizes.fixPadding - 15.0,
-          }}
-        >
-          {item.tabletsOrCapsulesCount} {item.type} in Bottle
-        </Text>
-        <View
-          style={{
-            marginTop: Sizes.fixPadding - 17.0,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ ...Fonts.primaryColor25Medium }}>₹{item.price}</Text>
-          <Text
-            style={{
-              ...Fonts.primaryColor18Light,
-              marginLeft: Sizes.fixPadding - 5.0,
-              textDecorationLine: "line-through",
-            }}
-          >
-            ₹{item.discountPrice}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-    return (
-      <View
-        style={{
-          marginVertical: Sizes.fixPadding * 2.0,
-          backgroundColor: Colors.whiteColor,
-        }}
-      >
-        <Text
-          style={{
-            ...Fonts.blackColor19Medium,
-            marginTop: Sizes.fixPadding + 3.0,
-            marginHorizontal: Sizes.fixPadding * 2.0,
-          }}
-        >
-          Handpicked Items for You
-        </Text>
-        <FlatList
-          horizontal
-          data={handPickedItemsList}
-          keyExtractor={(item) => `₹{item.id}`}
-          renderItem={renderItem}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingLeft: Sizes.fixPadding * 2.0,
-            paddingTop: Sizes.fixPadding,
-            paddingBottom: Sizes.fixPadding * 2.0,
-          }}
-        />
-      </View>
-    );
-  }
-
   function addMoreItemsInfo() {
     return (
       <TouchableOpacity
@@ -1002,110 +396,6 @@ const CartScreen = () => {
             color={Colors.primaryColor}
           />
         </View>
-      </TouchableOpacity>
-    );
-  }
-
-  function selectQuantityDialog() {
-    return (
-      <Modal animationType="none" transparent={true} visible={quantityDialog}>
-        <TouchableWithoutFeedback>
-          <View style={styles.selectQuantityModelStyle}>
-            <View
-              style={{
-                width: width * 0.8,
-                backgroundColor: Colors.whiteColor,
-                borderRadius: Sizes.fixPadding,
-              }}
-            >
-              <View style={styles.selectQuantityTitleStyle}>
-                <Text style={{ ...Fonts.primaryColor20Medium }}>
-                  Select Quantity
-                </Text>
-                <MaterialIcons
-                  name="close"
-                  size={24}
-                  onPress={() => updateState({ quantityDialog: false })}
-                  color={Colors.primaryColor}
-                />
-              </View>
-              <View
-                style={{ backgroundColor: Colors.primaryColor, height: 1.0 }}
-              />
-              <TouchableOpacity
-                activeOpacity={0.6}
-                onPress={() => {
-                  removeItem();
-                  updateState({ quantityDialog: false });
-                }}
-              >
-                <Text
-                  style={{
-                    margin: Sizes.fixPadding,
-                    ...Fonts.primaryColor19Medium,
-                  }}
-                >
-                  Remove item
-                </Text>
-              </TouchableOpacity>
-              {quantity({ number: 1 })}
-              {quantity({ number: 2 })}
-              {quantity({ number: 3 })}
-              {quantity({ number: 4 })}
-              {quantity({ number: 5 })}
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    );
-  }
-
-  function changeQuantity({ quantity }) {
-    const newList = cartItems.map((product) => {
-      if (product.id === currentItemId) {
-        const updatedItem = { ...product, qty: quantity };
-        return updatedItem;
-      }
-      return product;
-    });
-    updateState({ cartItems: newList });
-  }
-
-  function quantity({ number }) {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => {
-          updateState({ currentQuantity: number });
-          changeQuantity({ quantity: number });
-          updateState({ quantityDialog: false });
-        }}
-        style={{
-          backgroundColor:
-            currentQuantity == number ? "#E2E2E2" : Colors.whiteColor,
-          borderBottomLeftRadius: number == 5 ? Sizes.fixPadding : 0.0,
-          borderBottomRightRadius: number == 5 ? Sizes.fixPadding : 0.0,
-          ...styles.selectedQuantityWrapStyle,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ ...Fonts.primaryColor19Medium }}>{number}</Text>
-          {number == 5 ? (
-            <Text
-              style={{
-                ...Fonts.primaryColor15Light,
-                marginLeft: Sizes.fixPadding,
-              }}
-            >
-              Max Qty
-            </Text>
-          ) : null}
-        </View>
-        {currentQuantity == number ? (
-          <View style={styles.doneIconWrapStyle}>
-            <MaterialIcons name="check" size={20} color={Colors.whiteColor} />
-          </View>
-        ) : null}
       </TouchableOpacity>
     );
   }
@@ -1230,7 +520,10 @@ const CartScreen = () => {
                         //value={inputQty}
                         value={item.qty}
                         onContentSizeChange={(event) => {
-                          event.target.style.height = `${Math.min(120, event.nativeEvent.contentSize.height)}px`; // Max height 120px
+                          event.target.style.height = `${Math.min(
+                            120,
+                            event.nativeEvent.contentSize.height
+                          )}px`; // Max height 120px
                         }}
                         onChangeText={(text) =>
                           handleQuantityChange(item.id, text)
@@ -1255,33 +548,7 @@ const CartScreen = () => {
     );
   }
 
-  function removeItem() {
-    
-  }
-
-  function freeDeliveryInfo() {
-    return (
-      <View style={styles.freeDeliveryInfoWrapStyle}>
-        <View style={styles.freeDeliveryInfoStyle}>
-          <Image
-            source={require("../../assets/images/icons/icon_12.png")}
-            style={{ width: 20.0, height: 20.0 }}
-          />
-          <Text
-            style={{
-              ...Fonts.primaryColor18Regular,
-              flex: 1,
-              lineHeight: 23.0,
-              paddingTop: Sizes.fixPadding - 2.0,
-              marginLeft: Sizes.fixPadding + 2.0,
-            }}
-          >
-            Free delivery with cart value above ₹10
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  function removeItem() {}
 
   function header() {
     return (
@@ -1324,9 +591,9 @@ const styles = StyleSheet.create({
     paddingRight: Sizes.fixPadding,
   },
   input: {
-    width: '100%',
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     borderRadius: 5,
     minHeight: 40, // Initial height
