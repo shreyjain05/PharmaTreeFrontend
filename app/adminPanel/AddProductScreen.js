@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, updateState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   SafeAreaView,
   StyleSheet,
   FlatList,
+  Dimensions,
 } from "react-native";
 import { Card } from "react-native-paper";
 import {
@@ -29,14 +30,21 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
+import BASE_URL from "../../constant/variable";
+import { Dialog } from "react-native-paper";
+import { useNavigation } from "expo-router";
+
+const { width } = Dimensions.get("screen");
 
 const AddProductScreen = () => {
+  const navigation = useNavigation();
   const [productData, setProductData] = useState({
     name: "",
     companyName: "",
     packingName: "",
     composition: "",
     description: "",
+    productCode: "",
     image: "",
     productInventoryList: [
       {
@@ -58,6 +66,7 @@ const AddProductScreen = () => {
     image: "Product Image",
     name: "Product Name",
     packingName: "Packing Name",
+    productCode: "Product Code",
     "productInventoryList.batchNumber": "Batch Number",
     "productInventoryList.mrp": "MRP",
     "productInventoryList.purchaseRate": "Purchase Rate",
@@ -166,6 +175,13 @@ const AddProductScreen = () => {
     }
   };
 
+  const [state, setState] = useState({
+    showSuccessDialog: false,
+  });
+  const updateState = (data) => setState((state) => ({ ...state, ...data }));
+
+  const { showSuccessDialog } = state;
+
   const pickDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({ type: "text/csv" });
     if (!result.canceled) {
@@ -174,8 +190,51 @@ const AddProductScreen = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log("Final Product Data:", JSON.stringify(productData, null, 2));
+  function successDialog() {
+    return (
+      <Dialog visible={showSuccessDialog} style={styles.dialogWrapStyle}>
+        <View
+          style={{ backgroundColor: Colors.whiteColor, alignItems: "center" }}
+        >
+          <View style={styles.successIconWrapStyle}>
+            <MaterialIcons name="done" size={40} color={Colors.primaryColor} />
+          </View>
+          <Text
+            style={{
+              ...Fonts.grayColor18Medium,
+              marginTop: Sizes.fixPadding + 10.0,
+            }}
+          >
+            Product has been added!
+          </Text>
+        </View>
+      </Dialog>
+    );
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const updatedData = JSON.stringify(productData, null, 2);
+      console.log("Final Product Data:", updatedData);
+      const response = await fetch(`${BASE_URL}/api/v1/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: updatedData,
+      });
+      if (!response.ok) {
+        throw new Error("Failed to add Product: " + response.statusText);
+      } else {
+        updateState({ showSuccessDialog: true });
+        setTimeout(() => {
+          updateState({ showSuccessDialog: false });
+          navigation.push("adminPanel/AddProductScreen");
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error adding a product:", error);
+    }
   };
 
   return (
@@ -363,7 +422,7 @@ const AddProductScreen = () => {
                       }`}
                       value={inventory[key]}
                       onChangeText={(text) =>
-                        handleInventoryChange(inventoryIndex, key, text)
+                        handleInventoryChange(index, key, text)
                       }
                     />
                   )}
@@ -393,6 +452,7 @@ const AddProductScreen = () => {
           </View>
         </ScrollView>
       </View>
+      {successDialog()}
     </View>
   );
 };
@@ -410,6 +470,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     height: 56.0,
     paddingHorizontal: Sizes.fixPadding * 2.0,
+  },
+  dialogWrapStyle: {
+    borderRadius: Sizes.fixPadding,
+    width: width - 100,
+    backgroundColor: Colors.whiteColor,
+    paddingHorizontal: Sizes.fixPadding * 2.0,
+    paddingBottom: Sizes.fixPadding * 3.0,
+    paddingTop: Sizes.fixPadding - 5.0,
+    alignSelf: "center",
   },
   headingBackground: {
     width: "100%",

@@ -10,19 +10,30 @@ import {
   Button,
   ScrollView,
   Picker,
+  Dimensions,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
-import { Card } from "react-native-paper";
+import { Card, Dialog } from "react-native-paper";
 import BASE_URL from "../../constant/variable";
+import { useNavigation } from "expo-router";
+
+const { width } = Dimensions.get("screen");
 
 const CustomerInformationScreen = () => {
+  const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
   const [customerApiData, setCustomerApiData] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedMetaData, setSelectedMetaData] = useState([]);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedData, setEditedData] = useState({});
+
+  const [state, setState] = useState({
+    showSuccessDialog: false,
+  });
+  const updateState = (data) => setState((state) => ({ ...state, ...data }));
+  const { showSuccessDialog } = state;
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -59,13 +70,35 @@ const CustomerInformationScreen = () => {
     console.log("Updated Metadata", selectedMetaData);
   };
 
+  function successDialog() {
+    return (
+      <Dialog visible={showSuccessDialog} style={styles.dialogWrapStyle}>
+        <View
+          style={{ backgroundColor: Colors.whiteColor, alignItems: "center" }}
+        >
+          <View style={styles.successIconWrapStyle}>
+            <MaterialIcons name="done" size={40} color={Colors.primaryColor} />
+          </View>
+          <Text
+            style={{
+              ...Fonts.grayColor18Medium,
+              marginTop: Sizes.fixPadding + 10.0,
+            }}
+          >
+            Customer has been updated!
+          </Text>
+        </View>
+      </Dialog>
+    );
+  }
+
   const updateCustomer = async () => {
     try {
       const updatedData = {
         ...editedData,
         metaData: JSON.stringify(selectedMetaData),
       };
-      console.log("updated Data", updatedData);
+      console.log("updated customer Data", updatedData);
       const response = await fetch(`${BASE_URL}/api/v1/customer`, {
         method: "PUT",
         headers: {
@@ -73,9 +106,16 @@ const CustomerInformationScreen = () => {
         },
         body: JSON.stringify(updatedData),
       });
-      if (!response.ok) throw new Error("Failed to update customer");
-
-      setEditModalVisible(false);
+      if (!response.ok) {
+        throw new Error("Failed to update customer");
+      } else {
+        setEditModalVisible(false);
+        updateState({ showSuccessDialog: true });
+        setTimeout(() => {
+          updateState({ showSuccessDialog: false });
+          navigation.push("adminPanel/CustomerInformationScreen");
+        }, 2000);
+      }
     } catch (error) {
       console.error("Error updating customer:", error);
     }
@@ -281,7 +321,7 @@ const CustomerInformationScreen = () => {
                 <View style={styles.modalButtonContainer}>
                   <TouchableOpacity
                     style={styles.modalButton}
-                    onPress={() => console.log(editedData)}
+                    onPress={() => updateCustomer()}
                   >
                     <Text style={styles.modalButtonText}>Save</Text>
                   </TouchableOpacity>
@@ -297,11 +337,21 @@ const CustomerInformationScreen = () => {
           </Modal>
         </ScrollView>
       </View>
+      {successDialog()}
     </View>
   );
 };
 
 const styles = {
+  dialogWrapStyle: {
+    borderRadius: Sizes.fixPadding,
+    width: width - 100,
+    backgroundColor: Colors.whiteColor,
+    paddingHorizontal: Sizes.fixPadding * 2.0,
+    paddingBottom: Sizes.fixPadding * 3.0,
+    paddingTop: Sizes.fixPadding - 5.0,
+    alignSelf: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff", // Optional: Ensures a clean background

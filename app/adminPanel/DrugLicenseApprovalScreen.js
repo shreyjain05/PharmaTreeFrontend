@@ -15,21 +15,6 @@ import {
 import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { TextInput } from "react-native-paper";
 import { useNavigation } from "expo-router";
-import {
-  User,
-  ChevronRight,
-  ListChecks,
-  PlusCircle,
-  Upload,
-  CreditCard,
-  FileText,
-  Package,
-  Percent,
-  CreditCardIcon,
-  Info,
-  Clock,
-  Target,
-} from "lucide-react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { AppContext } from "../context/AppProvider";
 import BASE_URL from "../../constant/variable";
@@ -44,123 +29,82 @@ const DrugLicenseApprovalScreen = () => {
 
   console.log("Is user Admin :", isAdmin);
 
-  const [searchText, setSearchText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [comment, setComment] = useState("");
+
   const [users, setUsers] = useState([]);
   console.log("Current Users:" + JSON.stringify(users));
+
   useEffect(() => {
     fetch(`${BASE_URL}/api/v1/customer`)
       .then((res) => res.json())
       .then((data) => {
+        console.log("Received Response", data);
         const filteredUsers = data.filter((user) => user.active === false);
         setUsers(filteredUsers);
       })
       .catch((error) => console.error("Error fetching customers:", error));
   }, []);
 
-
-
   function updateCustomer() {
-      fetch(`${BASE_URL}/api/v1/customer`)
-        .then((res) => res.json())
-        .then((data) => {
-          const filteredUsers = data.filter((user) => user.active === false);
-          setUsers(filteredUsers);
-        })
+    fetch(`${BASE_URL}/api/v1/customer`)
+      .then((res) => res.json())
+      .then((data) => {
+        const filteredUsers = data.filter((user) => user.active === false);
+        setUsers(filteredUsers);
+      });
   }
 
   function successDialog() {
     return (
-        <Dialog
-            visible={showSuccessDialog}
-            style={styles.dialogWrapStyle}
+      <Dialog visible={showSuccessDialog} style={styles.dialogWrapStyle}>
+        <View
+          style={{ backgroundColor: Colors.whiteColor, alignItems: "center" }}
         >
-            <View style={{ backgroundColor: Colors.whiteColor, alignItems: 'center' }}>
-                <View style={styles.successIconWrapStyle}>
-                    <MaterialIcons name="done" size={40} color={Colors.primaryColor} />
-                </View>
-                <Text style={{ ...Fonts.grayColor18Medium, marginTop: Sizes.fixPadding + 10.0 }}>
-                    Drug License Status has been updated!
-                </Text>
-            </View>
-        </Dialog>
-    )
-}
-
-  function handleApproval(id) {
-    console.log("Approving customer", id)
-     fetch(`${BASE_URL}/api/v1/customer/approval`, {
-       method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({ customerId: id, approved: true }),
-     })
-       .then((res) => res.json())
-       .then(() => {console.log("Approved");
-       updateCustomer() // update user list after approval
-       updateState({ showSuccessDialog: true })
-       setTimeout(() => {
-           updateState({ showSuccessDialog: false })
-           navigation.push('/DrugLicenseApprovalScreen');
-       }, 2000);})
-       .catch((err) => console.error(err));
+          <View style={styles.successIconWrapStyle}>
+            <MaterialIcons name="done" size={40} color={Colors.primaryColor} />
+          </View>
+          <Text
+            style={{
+              ...Fonts.grayColor18Medium,
+              marginTop: Sizes.fixPadding + 10.0,
+            }}
+          >
+            Drug License Status has been updated!
+          </Text>
+        </View>
+      </Dialog>
+    );
   }
 
-  function handleRejection(id) {
-    console.log("Rejecting customer", id)
+  function handleApproval(id, status) {
+    console.log("Approving customer", id);
     fetch(`${BASE_URL}/api/v1/customer/approval`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId: id, approved: true }),
+      body: JSON.stringify({ customerId: id, approved: status }),
     })
       .then((res) => res.json())
-      .then(() => {console.log("Approved");
-      updateCustomer() // update user list after approval
-      updateState({ showSuccessDialog: true })
-      setTimeout(() => {
-          updateState({ showSuccessDialog: false })
-          navigation.push('/DrugLicenseApprovalScreen');
-      }, 2000);})
+      .then(() => {
+        console.log("Status:", status);
+        updateCustomer(); // update user list after approval
+        updateState({ showSuccessDialog: true });
+        setTimeout(() => {
+          updateState({ showSuccessDialog: false });
+          navigation.push("/DrugLicenseApprovalScreen");
+        }, 2000);
+      })
       .catch((err) => console.error(err));
   }
 
   const [state, setState] = useState({
-          showSuccessDialog: false,
-          logout: false,
-      })
-  
-      const updateState = (data) => setState((state) => ({ ...state, ...data }))
-  
-      const {
-          showSuccessDialog,
-          logout,
-      } = state;
+    showSuccessDialog: false,
+    logout: false,
+  });
 
-  function adminPanelButton(title, icon, screenName) {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => navigation.push(screenName)}
-        style={styles.adminPanelButtonStyle}
-      >
-        {/* {icon}
-                    <Text style={{ ...Fonts.primaryColor19Medium, marginLeft: 10 }}>
-                        {title}
-                    </Text>
-                    */}
-        {/* Left Arrow Icon */}
+  const updateState = (data) => setState((state) => ({ ...state, ...data }));
 
-        {/* Icon inside Circle */}
-        <View style={styles.iconContainer}>{icon}</View>
-
-        {/* Title */}
-        <Text style={styles.title}>{title}</Text>
-        <ChevronRight size={24} color="#0B678C" style={styles.leftArrow} />
-
-        {/* Bottom Separator */}
-        <View style={styles.separator} />
-      </TouchableOpacity>
-    );
-  }
+  const { showSuccessDialog, logout } = state;
 
   return (
     <View style={{ flex: 1, backgroundColor: "white" }}>
@@ -184,10 +128,14 @@ const DrugLicenseApprovalScreen = () => {
           <Card
             style={{
               padding: 25,
-              marginBottom: 20,
+              margin: 10,
               borderRadius: 20,
               elevation: 5,
               backgroundColor: "#FFFFFF",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 5,
             }}
           >
             <Text
@@ -213,7 +161,12 @@ const DrugLicenseApprovalScreen = () => {
               onPress={() => setModalVisible(false)}
             >
               <View style={styles.modalContainer}>
-                <Image source={{ uri: "https://images.unsplash.com/photo-1729505622656-6da75375c3a2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }} style={styles.largeImage} />
+                <Image
+                  source={{
+                    uri: "https://images.unsplash.com/photo-1729505622656-6da75375c3a2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                  }}
+                  style={styles.largeImage}
+                />
               </View>
             </TouchableOpacity>
           </Modal>
@@ -222,353 +175,142 @@ const DrugLicenseApprovalScreen = () => {
             data={users}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <Card
-                style={{
-                  padding: 20,
-                  margin: 15,
-                  borderRadius: 15,
-                  backgroundColor: "#FFFFFF",
-                  elevation: 3,
-                }}
-              >
+              <Card style={styles.card}>
                 {item.status === "INACTIVE" ? (
                   <View style={{ padding: 16 }}>
                     {/* Centered Name */}
-                    <View style={{ alignItems: "center", marginBottom: 10 }}>
-                      <Text style={{ fontSize: 18, fontWeight: "bold", color: "#10857F" }}>
+                    <View style={styles.centeredText}>
+                      <Text style={styles.nameText}>
                         {item.firstName} {item.lastName}
                       </Text>
                     </View>
 
                     {/* License Information in Single Line */}
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#555",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
-                      >
-                        Drug License 20B
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#555",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
-                      >
-                        Drug License 21B
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#555",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
-                      >
-                        Food License
-                      </Text>
+                    <View style={styles.licenseRow}>
+                      <Text style={styles.licenseText}>Drug License 20B</Text>
+                      <Text style={styles.licenseText}>Drug License 21B</Text>
+                      <Text style={styles.licenseText}>Food License</Text>
                     </View>
 
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#555",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
-                      >
+                    <View style={styles.licenseRow}>
+                      <Text style={styles.licenseText}>
                         {item.drugLicenseNumber20B}
                       </Text>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#555",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
-                      >
+                      <Text style={styles.licenseText}>
                         {item.drugLicenseNumber21B}
                       </Text>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color: "#555",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
-                      >
+                      <Text style={styles.licenseText}>
                         {item.foodLicenseNumber}
                       </Text>
                     </View>
 
                     {/* Action Buttons */}
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                      }}
-                    >
+                    <View style={styles.buttonsContainer}>
                       <TouchableOpacity
-                        onPress={() => handleApproval(item.id)}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          backgroundColor: "#10857F",
-                          padding: 12,
-                          borderRadius: 10,
-                          flex: 1,
-                          marginRight: 5,
-                          justifyContent: "center",
-                        }}
+                        onPress={handleApproval(item.id, "Approved")}
+                        style={styles.button}
                       >
                         <CheckCircle
                           size={20}
                           color="#FFFFFF"
-                          style={{ marginRight: 8 }}
+                          style={styles.icon}
                         />
-                        <Text style={{ color: "#FFFFFF", fontSize: 16 }}>
-                          Approve
-                        </Text>
+                        <Text style={styles.buttonText}>Approve</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => handleRejection(item.id)}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          backgroundColor: "#10857F",
-                          padding: 12,
-                          borderRadius: 10,
-                          flex: 1,
-                          marginHorizontal: 5,
-                          justifyContent: "center",
-                        }}
+                        onPress={handleApproval(item.id, "Rejected")}
+                        style={styles.button}
                       >
                         <XCircle
                           size={20}
                           color="#FFFFFF"
-                          style={{ marginRight: 8 }}
+                          style={styles.icon}
                         />
-                        <Text style={{ color: "#FFFFFF", fontSize: 16 }}>
-                          Reject
-                        </Text>
+                        <Text style={styles.buttonText}>Reject</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => setModalVisible(true)}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          backgroundColor: "#10857F",
-                          padding: 12,
-                          borderRadius: 10,
-                          flex: 1,
-                          marginLeft: 5,
-                          justifyContent: "center",
-                        }}
+                        onPress={handleApproval(item.id, "Review")}
+                        style={styles.button}
                       >
                         <CheckCircle
                           size={20}
                           color="#FFFFFF"
-                          style={{ marginRight: 8 }}
+                          style={styles.icon}
                         />
-                        <Text style={{ color: "#FFFFFF", fontSize: 16 }}>
-                          View License
-                        </Text>
+                        <Text style={styles.buttonText}>Review</Text>
                       </TouchableOpacity>
                     </View>
+
+                    {/* Status Text */}
+                    {status && <Text style={styles.statusText}>{status}</Text>}
+
+                    {/* Stylish Comment Box */}
+                    <TextInput
+                      style={styles.commentBox}
+                      placeholder="Add a comment..."
+                      value={comment}
+                      onChangeText={setComment}
+                      placeholderTextColor="#777"
+                    />
+
+                    {/* View License Button */}
+                    <TouchableOpacity
+                      onPress={() => setModalVisible(true)}
+                      style={styles.viewButton}
+                    >
+                      <CheckCircle
+                        size={20}
+                        color="#FFFFFF"
+                        style={styles.icon}
+                      />
+                      <Text style={styles.buttonText}>View License</Text>
+                    </TouchableOpacity>
                   </View>
                 ) : (
                   <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: "bold",
-                      color: item.status === "Approved" ? "#2E7D32" : "#D32F2F",
-                      textAlign: "center",
-                    }}
+                    style={[
+                      styles.statusLabel,
+                      {
+                        color:
+                          item.status === "Approved" ? "#2E7D32" : "#D32F2F",
+                      },
+                    ]}
                   >
                     {item.status}
                   </Text>
                 )}
+
+                {/* License Image Modal */}
+                <Modal
+                  visible={modalVisible}
+                  transparent={true}
+                  onRequestClose={() => setModalVisible(false)}
+                  animationType="fade"
+                >
+                  <TouchableOpacity
+                    style={styles.modalBackground}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <View style={styles.modalContainer}>
+                      <Image
+                        source={{
+                          uri: "https://images.unsplash.com/photo-1729505622656-6da75375c3a2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+                        }}
+                        style={styles.largeImage}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </Modal>
               </Card>
             )}
           />
-          
         </ScrollView>
-        
-        {logoutDialog()}
       </View>
       {successDialog()}
     </View>
   );
-
-  function logoutDialog() {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={logout}
-        onRequestClose={() => {
-          updateState({ logout: false });
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => {
-            updateState({ logout: false });
-          }}
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <View style={{ justifyContent: "center", flex: 1 }}>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {}}
-              style={{ ...styles.logoutDialogWrapStyle }}
-            >
-              <Text
-                style={{
-                  ...Fonts.blackColor19Medium,
-                  paddingBottom: Sizes.fixPadding + 10.0,
-                }}
-              >
-                Are You sure want to logout?
-              </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginHorizontal: Sizes.fixPadding * 2.0,
-                }}
-              >
-                <TouchableOpacity
-                  activeOpacity={0.6}
-                  onPress={() => updateState({ logout: false })}
-                  style={styles.cancelButtonStyle}
-                >
-                  <Text style={{ ...Fonts.primaryColor18Medium }}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.6}
-                  onPress={() => {
-                    updateState({ logout: false });
-                    navigation.push("auth/signinScreen");
-                  }}
-                  style={styles.dialogLogoutButtonStyle}
-                >
-                  <Text style={{ ...Fonts.whiteColor18Medium }}>Logout</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    );
-  }
-
-  function logoutButton() {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => updateState({ logout: true })}
-        style={styles.logoutButtonStyle}
-      >
-        <Text style={{ ...Fonts.primaryColor19Medium }}>Logout</Text>
-      </TouchableOpacity>
-    );
-  }
-
-  function activeOrderButton() {
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() => navigation.push("activeOrders/activeOrdersScreen")}
-        style={styles.activeOrderButtonStyle}
-      >
-        <Text style={{ ...Fonts.whiteColor19Medium }}>Active Orders</Text>
-      </TouchableOpacity>
-    );
-  }
-
-  function nameAndMobileNumberInfo() {
-    return (
-      <View
-        style={{
-          backgroundColor: Colors.whiteColor,
-          paddingVertical: Sizes.fixPadding * 2.0,
-        }}
-      >
-        {nameTextField()}
-        {mobileNumberTextField()}
-      </View>
-    );
-  }
-
-  function mobileNumberTextField() {
-    return (
-      <TextInput
-        label="Mobile Number"
-        value={mobileNumber}
-        onChangeText={(text) => updateState({ mobileNumber: text })}
-        mode="outlined"
-        style={{
-          height: 50.0,
-          ...Fonts.primaryColor17Medium,
-          backgroundColor: Colors.whiteColor,
-          marginHorizontal: Sizes.fixPadding * 2.0,
-        }}
-        outlineColor={Colors.grayColor}
-        selectionColor={Colors.primaryColor}
-        theme={{
-          colors: { primary: Colors.primaryColor, underlineColor: "#C5C5C5" },
-        }}
-        keyboardType="phone-pad"
-      />
-    );
-  }
-
-  function nameTextField() {
-    return (
-      <TextInput
-        label="Name"
-        mode="outlined"
-        value={name}
-        onChangeText={(text) => updateState({ name: text })}
-        style={{
-          height: 50.0,
-          ...Fonts.primaryColor17Medium,
-          backgroundColor: Colors.whiteColor,
-          marginHorizontal: Sizes.fixPadding * 2.0,
-          marginBottom: Sizes.fixPadding,
-        }}
-        outlineColor={Colors.grayColor}
-        selectionColor={Colors.primaryColor}
-        theme={{
-          colors: { primary: Colors.primaryColor, underlineColor: "#C5C5C5" },
-        }}
-      />
-    );
-  }
 
   function header() {
     return (
@@ -600,83 +342,6 @@ const DrugLicenseApprovalScreen = () => {
   }
 };
 
-const ApprovalCard = ({ imageUri, onAccept, onReject }) => {
-  const [status, setStatus] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const handleAccept = () => {
-    Alert.alert(
-      "Confirmation",
-      "Are you sure you want to accept the license?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          onPress: () => {
-            onAccept();
-            setStatus("accepted");
-          },
-        },
-      ]
-    );
-  };
-
-  const handleReject = () => {
-    Alert.alert(
-      "Confirmation",
-      "Are you sure you want to reject the license?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          onPress: () => {
-            onReject();
-            setStatus("rejected");
-          },
-        },
-      ]
-    );
-  };
-
-  return (
-    <View style={styles.cardContainer}>
-      <TouchableOpacity onPress={() => setModalVisible(true)}>
-        {/* <Image source={{ uri: imageUri }} style={styles.image} /> */}
-      </TouchableOpacity>
-      {/* <Text style={styles.description}>Click to show full image</Text> */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        onRequestClose={() => setModalVisible(false)}
-        animationType="fade"
-      >
-        <TouchableOpacity
-          style={styles.modalBackground}
-          onPress={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <Image source={{ uri: imageUri }} style={styles.largeImage} />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-      {status === null ? (
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleAccept}>
-            <Text style={styles.buttonText}>✔</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleReject}>
-            <Text style={styles.buttonText}>✖</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <Text style={styles.statusText}>
-          {status === "accepted" ? "Accepted License" : "Rejected License"}
-        </Text>
-      )}
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
   headerWrapStyle: {
     backgroundColor: Colors.primaryColor,
@@ -701,8 +366,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Sizes.fixPadding * 2.0,
     paddingBottom: Sizes.fixPadding * 3.0,
     paddingTop: Sizes.fixPadding - 5.0,
-    alignSelf: 'center',
-},
+    alignSelf: "center",
+  },
   logoutButtonStyle: {
     backgroundColor: Colors.whiteColor,
     borderColor: Colors.primaryColor,
@@ -814,6 +479,112 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     marginHorizontal: 20,
+  },
+  card: {
+    padding: 20,
+    margin: 15,
+    borderRadius: 15,
+    backgroundColor: "#FFFFFF",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  centeredText: {
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  nameText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#10857F",
+  },
+  licenseRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  licenseText: {
+    fontSize: 14,
+    color: "#555",
+    flex: 1,
+    textAlign: "center",
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#10857F",
+    padding: 12,
+    borderRadius: 10,
+    flex: 1,
+    marginHorizontal: 5,
+    justifyContent: "center",
+  },
+  viewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#10857F",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  statusText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  statusLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  commentBox: {
+    marginTop: 10,
+    height: 40, // Keeps it compact
+    borderWidth: 1,
+    borderColor: "#10857F",
+    borderRadius: 5, // Fully rounded on all sides
+    paddingHorizontal: 15, // Added padding for better text alignment
+    backgroundColor: "#F8F8F8",
+    fontSize: 14,
+    color: "#10857F",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2, // Light shadow effect
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+  },
+  largeImage: {
+    width: 300,
+    height: 400,
+    resizeMode: "contain",
   },
 });
 

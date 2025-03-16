@@ -9,19 +9,30 @@ import {
   Modal,
   TextInput,
   Picker,
+  Dimensions,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Card } from "react-native-paper";
+import { Card, Dialog } from "react-native-paper";
 import BASE_URL from "../../constant/variable";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
+
+const { width } = Dimensions.get("screen");
 
 const GracePeriodSettingScreen = () => {
+  const navigation = useNavigation();
   const [applicationConfig, setApplicationConfig] = useState([]);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedData, setEditedData] = useState({});
   const [selectedMetaData, setSelectedMetaData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [state, setState] = useState({
+    showSuccessDialog: false,
+  });
+  const updateState = (data) => setState((state) => ({ ...state, ...data }));
+  const { showSuccessDialog } = state;
 
   useEffect(() => {
     const fetchApplicationConfig = async () => {
@@ -39,7 +50,8 @@ const GracePeriodSettingScreen = () => {
         const appConfig = data.map((config) => ({
           id: config.id,
           name: config.name,
-          value: config.value, // Ensure value is a string
+          value: config.value,
+          type: config.type, // Ensure value is a string
         }));
 
         console.log("Configs", appConfig);
@@ -52,49 +64,30 @@ const GracePeriodSettingScreen = () => {
     fetchApplicationConfig();
   }, []);
 
-  const handleSaveGracePeriod = async () => {
-    if (!chemist || !gracePeriod) {
-      console.warn(
-        "Please select both a chemist and a grace period before saving."
-      );
-      return;
-    }
-
-    const payload = {
-      name: "GracePeriod",
-      value: gracePeriod,
-      type: "Application",
-    };
-
-    console.log("Saving Grace Period:", payload);
-
+  const updateConfig = async () => {
     try {
-      const response = await fetch(
-        "https://d90c-2405-201-4025-9105-c8fd-6228-b972-1d8d.ngrok-free.app/api/v1/applicationConfig",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
+      const updatedData = JSON.stringify(editedData);
+      console.log("Updated Config Data", updatedData);
+      const response = await fetch(`${BASE_URL}/api/v1/applicationConfig`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: updatedData,
+      });
       if (!response.ok) {
-        throw new Error(`Failed to save grace period: ${response.statusText}`);
+        throw new Error("Failed to update configuration");
+      } else {
+        setEditModalVisible(false);
+        updateState({ showSuccessDialog: true });
+        setTimeout(() => {
+          updateState({ showSuccessDialog: false });
+          navigation.push("adminPanel/GracePeriodSettingScreen");
+          setEditModalVisible(false);
+        }, 2000);
       }
-
-      const responseData = await response.json();
-      console.log("Successfully saved Grace Period:", responseData);
-      Alert.alert("Success", "Grace Period saved successfully!", [
-        { text: "OK" },
-      ]);
-
-      // Clear selected values
-      setChemist(null);
-      setGracePeriod(null);
     } catch (error) {
-      console.error("Error saving Grace Period:", error);
+      console.error("Error updating configuration:", error);
     }
   };
 
@@ -102,6 +95,28 @@ const GracePeriodSettingScreen = () => {
     setEditedData(config);
     setEditModalVisible(true);
   };
+
+  function successDialog() {
+    return (
+      <Dialog visible={showSuccessDialog} style={styles.dialogWrapStyle}>
+        <View
+          style={{ backgroundColor: Colors.whiteColor, alignItems: "center" }}
+        >
+          <View style={styles.successIconWrapStyle}>
+            <MaterialIcons name="done" size={40} color={Colors.primaryColor} />
+          </View>
+          <Text
+            style={{
+              ...Fonts.grayColor18Medium,
+              marginTop: Sizes.fixPadding + 10.0,
+            }}
+          >
+            Configuration has been updated!
+          </Text>
+        </View>
+      </Dialog>
+    );
+  }
 
   function header() {
     return (
@@ -232,7 +247,7 @@ const GracePeriodSettingScreen = () => {
                 <View style={styles.modalButtonContainer}>
                   <TouchableOpacity
                     style={styles.modalButton}
-                    onPress={() => console.log(editedData)}
+                    onPress={() => updateConfig()}
                   >
                     <Text style={styles.modalButtonText}>Save</Text>
                   </TouchableOpacity>
@@ -248,11 +263,21 @@ const GracePeriodSettingScreen = () => {
           </Modal>
         </ScrollView>
       </View>
+      {successDialog()}
     </View>
   );
 };
 
 const styles = {
+  dialogWrapStyle: {
+    borderRadius: Sizes.fixPadding,
+    width: width - 100,
+    backgroundColor: Colors.whiteColor,
+    paddingHorizontal: Sizes.fixPadding * 2.0,
+    paddingBottom: Sizes.fixPadding * 3.0,
+    paddingTop: Sizes.fixPadding - 5.0,
+    alignSelf: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff", // Optional: Ensures a clean background

@@ -584,7 +584,7 @@ const ProductDescriptionScreen = () => {
           </View>
 
           {/* Stock */}
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View
               style={{
                 width: 30,
@@ -610,7 +610,7 @@ const ProductDescriptionScreen = () => {
             >
               Stock: {item.inventoryCount}
             </Text>
-          </View>
+          </View> */}
         </TouchableOpacity>
       );
     };
