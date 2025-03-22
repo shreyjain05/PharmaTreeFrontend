@@ -23,6 +23,7 @@ import { AppContext } from "../context/AppProvider";
 import { Calendar } from "react-native-calendars";
 import BASE_URL from "../../constant/variable";
 import { Switch, RadioButton } from "react-native-paper";
+import { Wallet } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -34,10 +35,65 @@ const orderSummaryScreen = () => {
   const navigation = useNavigation();
   const { loggedInUser } = useContext(AppContext);
   const [applicationConfig, setApplicationConfig] = useState([]);
+  const [userRoyalty, setUserRoyalty] = useState("");
+  const [applicationPromo, setApplicationPromo] = useState([]);
 
   console.log("user information: " + JSON.stringify(loggedInUser));
 
   const { shoppingList, setShoppingList } = useContext(AppContext);
+
+  useEffect(() => {
+    const fetchApplicationConfig = async () => {
+      console.log("inside grace period use effect");
+
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/promotions`);
+        if (!response.ok) {
+          throw new Error("Failed to promotions");
+        }
+        const responseData = await response.json();
+        console.log("data from promotions api is ", responseData);
+        setApplicationPromo(responseData);
+      } catch (error) {
+        console.error("Error fetching Configurations:", error);
+      }
+    };
+
+    fetchApplicationConfig();
+  }, []);
+
+  useEffect(() => {
+    const fetchApplicationConfig = async () => {
+      console.log("inside grace period use effect");
+
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/royaltyHistory`);
+        if (!response.ok) {
+          throw new Error("Failed to Royalty History");
+        }
+        const responseData = await response.json();
+        console.log("data from Royalty api is ", responseData);
+        const loggedInUserId = loggedInUser.id; // Replace with actual logged-in user ID logic
+        const data = responseData.filter(
+          (item) => item.customerID === loggedInUserId
+        );
+        console.log("data from Royalty api is ", data);
+        const overallBalance = data.reduce(
+          (sum, item) =>
+            sum +
+            parseInt(item.pointsAdded, 10) -
+            parseInt(item.pointsDeducted, 10),
+          0
+        );
+        console.log("Overall Balance:", overallBalance);
+        setUserRoyalty(overallBalance);
+      } catch (error) {
+        console.error("Error fetching Configurations:", error);
+      }
+    };
+
+    fetchApplicationConfig();
+  }, []);
 
   useEffect(() => {
     const fetchApplicationConfig = async () => {
@@ -72,11 +128,22 @@ const orderSummaryScreen = () => {
     console.log("shoppingList in description:", shoppingList);
   }, [shoppingList]);
 
+  const getFreeQuantity = (item) => {
+    console.log("Checking promo for:", item.name);
+    for (const promo of applicationPromo) {
+      if (promo.promotionDetails.productName === item.name) {
+        console.log("Found promo for:", item.name);
+        return parseInt(promo.promotionDetails.freeQuantity, 10) || null;
+      }
+    }
+    return null;
+  };
+
   // Assuming `openedProduct` is passed via navigation params
   var { selectedInventory } = useLocalSearchParams();
   selectedInventory = shoppingList;
   //cartList = [...cartList, ...selectedInventory];
-  console.log("Received the products as:" + selectedInventory);
+  console.log("Received the products as:" + JSON.stringify(selectedInventory));
 
   const [state, setState] = useState({
     quantityDialog: false,
@@ -88,6 +155,7 @@ const orderSummaryScreen = () => {
     deleteDialog: false,
     showBootomSheet: false,
     discount: JSON.parse(loggedInUser.metaData).customerDiscount,
+    isCreditAllowed: JSON.parse(loggedInUser.metaData).isCreditAllowed,
   });
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
@@ -101,6 +169,7 @@ const orderSummaryScreen = () => {
     deleteDialog,
     showBootomSheet,
     discount,
+    isCreditAllowed,
   } = state;
 
   return (
@@ -314,7 +383,7 @@ const orderSummaryScreen = () => {
     const [selectedPaymentOption, setSelectedPaymentOption] = useState("full");
 
     // Compute the amount based on selection
-    const totalAmount = total() - discountAmount();
+    const totalAmount = total() - discountAmount() - userRoyalty;
     const payableAmount =
       selectedPaymentOption === "50"
         ? Math.round(totalAmount * 0.5)
@@ -325,7 +394,7 @@ const orderSummaryScreen = () => {
     return (
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Toggle for Pay Now / Pay Later */}
-        {totalAmount > 4000 && (
+        {isCreditAllowed === "Yes" && totalAmount > 4000 && (
           <View style={styles.paymentToggleContainer}>
             <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Now</Text>
             <Switch
@@ -534,6 +603,14 @@ const orderSummaryScreen = () => {
             </Text>
           </View>
         </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ ...Fonts.primaryColor18Regular }}>Wallet Amount</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ ...Fonts.primaryColor19Medium }}>
+              ₹{userRoyalty}
+            </Text>
+          </View>
+        </View>
         <DashedLine
           dashLength={5}
           dashThickness={2}
@@ -552,7 +629,7 @@ const orderSummaryScreen = () => {
             Amount to be paid
           </Text>
           <Text style={{ ...Fonts.primaryColor19Medium }}>
-            ₹{total() - discountAmount()}
+            ₹{total() - discountAmount() - userRoyalty}
           </Text>
         </View>
       </View>
@@ -626,24 +703,28 @@ const orderSummaryScreen = () => {
                   <Text style={styles.label}>{item.name}</Text>
                   <Text style={styles.value}>₹{item.price}</Text>
                 </View>
-
                 {/* CGST Row */}
                 <View style={styles.row}>
                   <Text style={styles.label}>CGST</Text>
                   <Text style={styles.value}>₹0</Text>
                 </View>
-
                 {/* SGST Row */}
                 <View style={styles.row}>
                   <Text style={styles.label}>SGST</Text>
                   <Text style={styles.value}>₹0</Text>
                 </View>
-
                 {/* Quantity Row */}
                 <View style={styles.row}>
                   <Text style={styles.label}>Qty</Text>
                   <Text style={styles.value}>{item.qty}</Text>
                 </View>
+
+                {getFreeQuantity(item) !== null && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Free Qty</Text>
+                    <Text style={styles.value}>{getFreeQuantity(item)}</Text>
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -693,7 +774,7 @@ const orderSummaryScreen = () => {
       let payments = {};
       console.log("Todays date", today);
 
-      var currentAmount = total() - discountAmount();
+      var currentAmount = total() - discountAmount() - userRoyalty;
       var discount = currentAmount * 0.05;
       var graceDays = parseInt(getConfig());
       console.log("Grace Days", graceDays);

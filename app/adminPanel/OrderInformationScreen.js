@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Image,
+  Linking,
 } from "react-native";
 import {
   Card,
@@ -16,7 +16,12 @@ import {
   ActivityIndicator,
 } from "react-native-paper";
 import { useNavigation } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  MaterialIcons,
+  FontAwesome5,
+  Entypo,
+  Ionicons,
+} from "@expo/vector-icons";
 import { AppContext } from "../context/AppProvider";
 import BASE_URL from "../../constant/variable";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
@@ -112,30 +117,91 @@ const OrderInformationScreen = () => {
         >
           {orderApiData.length > 0 ? (
             orderApiData.map((order) => (
-              <Card key={order.id} style={styles.orderCard}>
+              <Card style={styles.card}>
                 <Card.Content>
                   <Text style={styles.orderTitle}>
-                    🧾 Order Number: {order.orderID}
+                    <MaterialIcons name="receipt" size={20} color="#007bff" />{" "}
+                    Order Number: {order.orderID}
                   </Text>
                   <Divider style={styles.divider} />
-                  <Text style={styles.orderText}>
-                    📌 Invoice: {order.invoiceNumber}
-                  </Text>
-                  <Text style={[styles.orderText, styles.status]}>
-                    📌 Status: {order.status}
-                  </Text>
-                  <Text style={styles.orderText}>
-                    💰 Total Bill: ₹{order.totalBill}
-                  </Text>
-                  <Text style={styles.orderText}>
-                    ✅ Paid Amount: ₹{order.paidAmount}
-                  </Text>
-                  <Text style={[styles.orderText, styles.pending]}>
-                    ⚠️ Pending Amount: ₹{order.pendingAmount}
-                  </Text>
-                  <Text style={styles.orderText}>
-                    📅 Created At: {order.createdAt.split("T")[0]}
-                  </Text>
+
+                  {/* Order Details */}
+                  <View style={styles.infoContainer}>
+                    <View style={styles.row}>
+                      <FontAwesome5 name="user" size={18} color="#555" />
+                      <Text style={styles.orderText}>
+                        Customer: {order.customerID}
+                      </Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <Entypo name="text-document" size={18} color="#555" />
+                      <Text style={styles.orderText}>
+                        Invoice: {order.invoiceNumber}
+                      </Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <Ionicons
+                        name="information-circle"
+                        size={18}
+                        color="#555"
+                      />
+                      <Text style={[styles.orderText, styles.status]}>
+                        Status: {order.status}
+                      </Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <FontAwesome5
+                        name="rupee-sign"
+                        size={16}
+                        color="#28a745"
+                      />
+                      <Text style={styles.orderText}>
+                        Total Bill: ₹{order.totalBill}
+                      </Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <FontAwesome5
+                        name="check-circle"
+                        size={18}
+                        color="green"
+                      />
+                      <Text style={styles.orderText}>
+                        Paid Amount: ₹{order.paidAmount}
+                      </Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <MaterialIcons name="warning" size={18} color="orange" />
+                      <Text style={[styles.orderText, styles.pending]}>
+                        Pending Amount: ₹{order.pendingAmount}
+                      </Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <FontAwesome5
+                        name="calendar-alt"
+                        size={18}
+                        color="#555"
+                      />
+                      <Text style={styles.orderText}>
+                        Created At: {order.createdAt.split("T")[0]}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Open PDF Button */}
+                  <Button
+                    mode="contained"
+                    onPress={() => Linking.openURL(order.invoicePDFLink)}
+                    style={styles.pdfButton}
+                    icon="file-pdf-box"
+                  >
+                    Open Invoice
+                  </Button>
                 </Card.Content>
               </Card>
             ))
@@ -177,75 +243,49 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   card: {
-    flexDirection: "row",
-    padding: 16,
+    margin: 10,
+    padding: 15,
     borderRadius: 10,
     backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: Colors.primaryColor,
-    marginBottom: 15,
-    shadowColor: "#000",
+    elevation: 5, // Shadow for Android
+    shadowColor: "#000", // Shadow for iOS
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.5,
     shadowRadius: 4,
-    elevation: 5,
-  },
-  cardTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#10857F",
-    textAlign: "center",
-  },
-  scrollContainer: {
-    paddingHorizontal: 15,
-    paddingBottom: 20,
-  },
-  orderCard: {
-    padding: 20,
-    margin: 12,
-    borderRadius: 12,
-    backgroundColor: "#ffffff",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    borderWidth: 1,
-    borderColor: Colors.primaryColor,
   },
   orderTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
-  },
-  orderText: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 3,
-  },
-  status: {
-    fontWeight: "bold",
-    color: "#008000",
-  },
-  pending: {
-    fontWeight: "bold",
-    color: "#ff6347",
-  },
-  noDataText: {
-    textAlign: "center",
     fontSize: 18,
-    color: "#777",
-    marginTop: 30,
-  },
-  loader: {
-    marginTop: 30,
-    alignSelf: "center",
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#333",
   },
   divider: {
     marginVertical: 8,
-    backgroundColor: "#ccc",
-    height: 1,
+  },
+  infoContainer: {
+    marginVertical: 8,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  orderText: {
+    fontSize: 16,
+    color: "#444",
+    marginLeft: 8,
+  },
+  status: {
+    fontWeight: "bold",
+    color: "#007bff",
+  },
+  pending: {
+    fontWeight: "bold",
+    color: "red",
+  },
+  pdfButton: {
+    marginTop: 12,
+    backgroundColor: "#10857F",
   },
 });
 

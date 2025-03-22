@@ -21,6 +21,7 @@ import { TextInput } from "react-native-paper";
 import MyStatusBar from "../../component/myStatusBar";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { AppContext } from "../context/AppProvider";
+import BASE_URL from "../../constant/variable";
 
 const { width, height } = Dimensions.get("screen");
 

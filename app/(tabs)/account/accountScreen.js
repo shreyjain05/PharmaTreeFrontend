@@ -61,14 +61,14 @@ const AccountScreen = () => {
           screen: "adminPanel/OrderStatusChangeScreen",
         },
         {
-          title: "Create Order",
-          icon: <PlusCircle size={24} color="#10857F" />,
-          screen: "adminPanel/CreateOrderAdminScreen",
-        },
-        {
           title: "Orders",
           icon: <PlusCircle size={24} color="#10857F" />,
           screen: "adminPanel/OrderInformationScreen",
+        },
+        {
+          title: "Feedback",
+          icon: <PlusCircle size={24} color="#10857F" />,
+          screen: "adminPanel/FeedbackScreen",
         },
       ],
     },

@@ -73,6 +73,7 @@ export default function RootLayout() {
         <Stack.Screen name="adminPanel/ChemistDiscountConfigScreen" />
         <Stack.Screen name="adminPanel/ChemistPaymentOptionScreen" />
         <Stack.Screen name="adminPanel/OrderInformationScreen" />
+        <Stack.Screen name="adminPanel/FeedbackScreen" />
         <Stack.Screen name="adminPanel/GracePeriodSettingScreen" />
         <Stack.Screen name="adminPanel/TargetsSettingScreen" />
         <Stack.Screen name="adminPanel/DrugLicenseApprovalScreen" />

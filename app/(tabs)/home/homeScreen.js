@@ -738,6 +738,7 @@ const HeaderInfo = ({ userInfo, navigation }) => (
 
     {/* Right Side: Icons */}
     <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+      {/* Cart Icon */}
       <View style={{ alignItems: "center" }}>
         <TouchableOpacity
           onPress={() => navigation.push("cart/cartScreen")}
@@ -753,6 +754,25 @@ const HeaderInfo = ({ userInfo, navigation }) => (
         </TouchableOpacity>
         <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>
           Cart
+        </Text>
+      </View>
+
+      {/* Wallet Icon */}
+      <View style={{ alignItems: "center" }}>
+        <TouchableOpacity
+          onPress={() => navigation.push("wallet/WalletScreen")}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <MaterialCommunityIcons name="wallet" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>
+          Wallet
         </Text>
       </View>
     </View>

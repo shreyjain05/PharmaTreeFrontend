@@ -12,8 +12,10 @@ import { Card, TextInput } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AppContext } from "../context/AppProvider";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
+import { useNavigation } from "expo-router";
 
-const InventoryInformationScreen = ({ navigation }) => {
+const InventoryInformationScreen = () => {
+  const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const { products } = useContext(AppContext);

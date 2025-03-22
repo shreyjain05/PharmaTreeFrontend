@@ -12,8 +12,10 @@ import * as DocumentPicker from "expo-document-picker";
 import { FontAwesome } from "@expo/vector-icons";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
 const UploadAllStockScreen = () => {
+  const navigation = useNavigation();
   const [file, setFile] = useState(null);
 
   const pickDocument = async () => {
