@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Text,
   View,
@@ -31,32 +31,54 @@ const VerificationScreen = () => {
 
   const {
     products,
+    setProducts,
     setLoggedInUser,
-    loggedInUser,
-    frequentItems,
     setFrequentItems,
-    wishlistItems,
     setWishlistItems,
-    metadata,
     setMetaData,
-    isAdmin,
     setAdmin,
   } = useContext(AppContext);
-  const [otpInput, setotpInput] = useState("");
-  const [isLoading, setisLoading] = useState(false);
+
+  const [otpInput, setOtpInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    console.log("use effect App context screen");
+
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/v1/products`); // Use the correct API endpoint
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        console.log("after fetch call");
+
+        const data = await response.json();
+        console.log("data from app context products api call", data);
+
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+
+    fetchProducts(); // Call the function inside useEffect, not outside
+  }, []);
+
   async function handleVerification() {
     if (otpInput.length !== 4) {
       Alert.alert("Error", "Please enter a valid 4-digit OTP.");
       return;
     }
 
-    setisLoading(true);
+    setIsLoading(true);
 
     const payload = {
       mobile: mobile, // Dynamic mobile number
       otp: otpInput,
       validate: true,
     };
+
     console.log("verification page payload is ", payload);
     try {
       const response = await fetch(`${BASE_URL}/api/v1/login`, {
@@ -70,16 +92,18 @@ const VerificationScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
+        //Login failed
         if (data.status === "FAILED") {
           Alert.alert("Login Failed", data.message || "Something went wrong.");
           return;
         }
+
         console.log("data from login api, ", data);
         setLoggedInUser(data.customer);
+
+        console.log("Is Customer Admin:", data.customer.isAdmin);
         setAdmin(data.customer.admin);
 
-        console.log("data from Products:", products);
-        console.log("Is Customer Admin:", data.customer.isAdmin);
         const frequentProducts = data.customer.frequentProducts;
         console.log("Frequent Products:", frequentProducts);
 
@@ -94,8 +118,10 @@ const VerificationScreen = () => {
 
         const metaData = JSON.parse(data.customer?.metaData || "{}");
         setMetaData(metaData);
+
         const wishedProducts = metaData.wishedProducts;
         console.log("Wished Products:", wishedProducts);
+
         if (wishedProducts != undefined && products != undefined) {
           // Find matching items from listOne
           const matchingItems = products.filter((product) =>
@@ -106,13 +132,9 @@ const VerificationScreen = () => {
         }
 
         navigation.push("(tabs)");
-        // navigation.push("auth/verificationScreen")
-
-        //navigation.push("auth/verificationScreen", { mobile: phoneNumber }); // Pass phoneNumber
-        //navigation.push("auth/verificationScreen", { mobile: phoneNumber });
       }
     } catch (error) {
-      setisLoading(false);
+      setIsLoading(false);
       Alert.alert("Error", "Network request failed. Please try again.");
       // navigation.push('(tabs)')
       // navigation.push("(tabs)");
@@ -222,12 +244,12 @@ const VerificationScreen = () => {
           numberOfDigits={4}
           focusColor={Colors.primaryColor}
           onTextChange={(text) => {
-            setotpInput(text);
+            setOtpInput(text);
             // if (text.length == 4) {
             //     Keyboard.dismiss();
-            //     setisLoading(true)
+            //     setIsLoading(true)
             //     setTimeout(() => {
-            //         setisLoading(false)
+            //         setIsLoading(false)
             //         navigation.push('(tabs)')
             //     }, 2000);
             // }

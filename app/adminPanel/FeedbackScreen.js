@@ -25,6 +25,7 @@ const FeedbackScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [feedbackSubject, setFeedbackSubject] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackName, setFeedbackName] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const { products } = useContext(AppContext);
 
@@ -71,6 +72,7 @@ const FeedbackScreen = () => {
       const feedbackData = {
         subject: feedbackSubject,
         feedbackText: feedbackText,
+        name: feedbackName,
       };
       console.log("Updated Config Data", feedbackData);
       const response = await fetch(`${BASE_URL}/api/v1/feedback`, {
@@ -147,7 +149,9 @@ const FeedbackScreen = () => {
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
               <TouchableOpacity style={styles.touchableContainer}>
-                <View style={styles.card}>
+                <Card style={styles.card}>
+                  {" "}
+                  {/* Changed View to Card */}
                   <View style={styles.detailsContainer}>
                     {/* Subject and Feedback */}
                     <View style={styles.rowContainer}>
@@ -155,13 +159,16 @@ const FeedbackScreen = () => {
                         Subject: {item.subject}
                       </Text>
                     </View>
+                    {/* Name Field */}
                     <View style={styles.rowContainer}>
-                      <Text style={styles.feedback}>
-                        Feedback: {item.feedbackText}
-                      </Text>
+                      <Text style={styles.name}>Customer: {item.name}</Text>
+                    </View>
+
+                    <View style={styles.rowContainer}>
+                      <Text style={styles.feedback}>{item.feedbackText}</Text>
                     </View>
                   </View>
-                </View>
+                </Card>
               </TouchableOpacity>
             )}
           />
@@ -174,49 +181,56 @@ const FeedbackScreen = () => {
             </TouchableOpacity>
           </View>
         </ImageBackground>
+      </ScrollView>
 
-        {/* Feedback Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Submit Feedback</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Subject"
-                value={feedbackSubject}
-                onChangeText={setFeedbackSubject}
-              />
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Your Feedback"
-                multiline
-                numberOfLines={2}
-                value={feedbackText}
-                onChangeText={setFeedbackText}
-              />
-              <View style={styles.buttonModalContainer}>
-                <TouchableOpacity
-                  style={styles.submitButton}
-                  onPress={submitFeedback}
-                >
-                  <Text style={styles.buttonText}>Submit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
+      {/* Feedback Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Submit Feedback</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={feedbackName}
+              onChangeText={setFeedbackName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Subject"
+              value={feedbackSubject}
+              onChangeText={setFeedbackSubject}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Your Feedback"
+              multiline
+              numberOfLines={2}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+            />
+            <View style={styles.buttonModalContainer}>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={submitFeedback}
+              >
+                <Text style={styles.buttonText}>Submit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      </ScrollView>
+        </View>
+      </Modal>
+
       {successDialog()}
     </View>
   );

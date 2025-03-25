@@ -121,7 +121,8 @@ const CartScreen = () => {
           >
             {cartItemsInfo()}
             {addMoreItemsInfo()}
-            <View style={styles.amountInfoContainer}>{amountInfo()}</View>
+            {amountInfo()}
+            {deliveredAddressInfo()}
           </ScrollView>
           <View style={styles.bottomFixedContainer}>
             {deliveredAddressAndPaymentInfo()}
@@ -257,7 +258,6 @@ const CartScreen = () => {
   function deliveredAddressAndPaymentInfo() {
     return (
       <View style={styles.deliveryAndPaymentInfoWrapStyle}>
-        {deliveredAddressInfo()}
         {totalAmountAndPaymentButton()}
       </View>
     );
@@ -292,60 +292,24 @@ const CartScreen = () => {
 
   function deliveredAddressInfo() {
     return (
-      <View style={styles.deliveredAddresInfoWrapStyle}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View style={styles.deliveredAddressIconStye}>
+      <View style={styles.deliveryCard}>
+        <View style={styles.deliveryRow}>
+          <View style={styles.iconContainer}>
             <Image
               source={require("../../assets/images/icons/icon_9.png")}
-              style={{ height: 50.0, width: 50.0 }}
+              style={styles.iconStyle}
             />
           </View>
-          <View style={{ flex: 1, marginLeft: Sizes.fixPadding }}>
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
-            >
-              <View
-                style={{
-                  width: width - 190.0,
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <View>
-                  <Text
-                    style={{
-                      ...Fonts.primaryColor17Regular,
-                    }}
-                  >
-                    Deliver to :
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      marginLeft: Sizes.fixPadding,
-                      ...Fonts.primaryColor18Medium,
-                    }}
-                  ></Text>
-                </View>
-              </View>
-              {/* <TouchableOpacity
-                activeOpacity={0.6}
-                onPress={() =>
-                  navigation.push("selectAddress/selectAddressScreen")
-                }
-              >
-                <Text style={{ ...Fonts.primaryColor20Medium }}>CHANGE</Text>
-              </TouchableOpacity> */}
+
+          <View style={styles.addressContent}>
+            <View style={styles.addressRow}>
+              <Text style={styles.labelText}>Deliver to :</Text>
+              <Text numberOfLines={1} style={styles.addressText}>
+                {getAddress()}
+              </Text>
             </View>
 
-            <Text style={{ ...Fonts.primaryColor18Medium }}>
-              {getAddress()}
-            </Text>
-            <Text style={{ ...Fonts.primaryColor18Medium }}>
-              {getAddressState()}
-            </Text>
+            <Text style={styles.addressText}>{getAddressState()}</Text>
           </View>
         </View>
       </View>
@@ -387,36 +351,23 @@ const CartScreen = () => {
 
   function amountInfo() {
     return (
-      <View
-        style={{
-          backgroundColor: Colors.whiteColor,
-          paddingHorizontal: Sizes.fixPadding * 2.0,
-        }}
-      >
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={{ ...Fonts.primaryColor18Regular }}>Cart Value</Text>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={{ ...Fonts.primaryColor19Medium }}>{total()}</Text>
-          </View>
+      <View style={styles.cartSummaryContainer}>
+        <View style={styles.rowBetween}>
+          <Text style={styles.labelText}>Cart Value</Text>
+          <Text style={styles.valueText}>₹{total()}</Text>
         </View>
+
         <DashedLine
-          dashLength={5}
-          dashThickness={2}
-          dashGap={3}
-          dashColor="rgba(0, 150, 136, 0.5)"
+          dashLength={6}
+          dashThickness={1.5}
+          dashGap={4}
+          dashColor="rgba(0, 150, 136, 0.4)"
+          style={{ marginVertical: 8 }}
         />
-        <View
-          style={{
-            flexDirection: "row",
-            paddingVertical: Sizes.fixPadding - 5.0,
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text style={{ ...Fonts.primaryColor19Medium }}>
-            Amount to be paid
-          </Text>
-          <Text style={{ ...Fonts.primaryColor19Medium }}>
+
+        <View style={styles.rowBetween}>
+          <Text style={styles.totalLabel}>Amount to be paid</Text>
+          <Text style={styles.totalValue}>
             ₹{total() + (total() > 10 ? 0 : 5)}
           </Text>
         </View>
@@ -427,15 +378,15 @@ const CartScreen = () => {
   function addMoreItemsInfo() {
     return (
       <TouchableOpacity
-        activeOpacity={0.6}
+        activeOpacity={0.7}
         onPress={() => navigation.push("allProducts/allProducts")}
-        style={styles.addMoreItemsInfoWrapStyle}
+        style={styles.addMoreItemsButton}
       >
-        <Text style={{ ...Fonts.primaryColor19Medium }}>Add More Items</Text>
-        <View style={styles.addIconWrapStyle}>
+        <Text style={styles.addMoreItemsText}>Add More Items</Text>
+        <View style={styles.addIconContainer}>
           <MaterialCommunityIcons
             name="plus"
-            size={24}
+            size={22}
             color={Colors.primaryColor}
           />
         </View>
@@ -447,127 +398,36 @@ const CartScreen = () => {
     return (
       <View>
         {cartList.map((item) => (
-          <View key={`₹{item.id}`}>
-            <View
-              style={{
-                backgroundColor: Colors.whiteColor,
-                paddingHorizontal: Sizes.fixPadding * 2.0,
-                paddingBottom: Sizes.fixPadding * 2.0,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  paddingTop: 50,
-                }}
-              >
-                <View style={{ flexDirection: "row" }}>
-                  <Image
-                    source={
-                      item.image
-                        ? { uri: item.image }
-                        : require("../../assets/images/defaultProduct.png")
-                    }
-                    style={{ width: 50.0, height: 50.0 }}
-                    resizeMode="contain"
-                  />
-                  <View
-                    style={{
-                      width: width - 150.0,
-                      marginLeft: Sizes.fixPadding,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        ...Fonts.primaryColor19Medium,
-                        lineHeight: 25.0,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text
-                      style={{
-                        ...Fonts.primaryColor18Regular,
-                        lineHeight: 23.0,
-                      }}
-                    >
-                      BY {item.manufacturer}
-                    </Text>
-                    <Text style={{ ...Fonts.primaryColor19Medium }}>
-                      {item.detail}
-                    </Text>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        marginBottom: Sizes.fixPadding,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text style={{ ...Fonts.primaryColor25Medium }}>
-                        ₹{item.price}
-                      </Text>
-                    </View>
-                    {/* <TouchableOpacity
-                      activeOpacity={0.6}
-                      onPress={() =>
-                        updateState({
-                          quantityDialog: true,
-                          currentItemId: item.id,
-                          currentQuantity: item.qty,
-                        })
-                      }
-                      style={styles.quantityCountWrapStyle}
-                    >
-                      <Text
-                        style={{
-                          ...Fonts.primaryColor19Medium,
-                          marginRight: Sizes.fixPadding - 7.0,
-                        }}
-                      >
-                        Qty {item.qty}
-                      </Text>
-                      <MaterialIcons
-                        name="arrow-drop-down"
-                        size={24}
-                        color={Colors.primaryColor}
-                      />
-                    </TouchableOpacity> */}
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      {/* <Text style={{ fontSize: 16, color: "#555", marginRight: 5 }}>Qty</Text> */}
-                      <Text
-                        style={{
-                          ...Fonts.primaryColor19Medium,
-                          marginRight: Sizes.fixPadding - 7.0,
-                        }}
-                      >
-                        Qty
-                      </Text>
+          <View key={`₹{item.id}`} style={styles.cardContainer}>
+            <View style={styles.cardContent}>
+              <View style={styles.row}>
+                {/* Product Image */}
+                <Image
+                  source={
+                    item.image
+                      ? { uri: item.image }
+                      : require("../../assets/images/defaultProduct.png")
+                  }
+                  style={styles.productImage}
+                  resizeMode="contain"
+                />
+
+                {/* Product Details */}
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.manufacturerText}>
+                    BY {item.manufacturer}
+                  </Text>
+                  <Text style={styles.productDetail}>{item.detail}</Text>
+
+                  {/* Price & Quantity */}
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceText}>₹{item.price}</Text>
+                    <View style={styles.quantityContainer}>
+                      <Text style={styles.quantityLabel}>Qty</Text>
                       <TextInput
-                        style={{
-                          ...Fonts.primaryColor19Medium,
-                          backgroundColor: "#FFFFFF", // White background
-                          borderWidth: 1,
-                          borderColor: Colors.primaryColor,
-                          borderRadius: 5,
-                          paddingHorizontal: 8,
-                          textAlign: "center", // Centers text horizontally
-                          textAlignVertical: "center", // Centers text vertically (important for Android)
-                          width: 50, // Compact width
-                          height: 35, // Ensures vertical alignment
-                          fontSize: 16, // Readable font size
-                        }}
-                        // keyboardType="numeric"
-                        //value={inputQty}
+                        style={styles.quantityInput}
                         value={item.qty}
-                        onContentSizeChange={(event) => {
-                          event.target.style.height = `${Math.min(
-                            120,
-                            event.nativeEvent.contentSize.height
-                          )}px`; // Max height 120px
-                        }}
                         onChangeText={(text) =>
                           handleQuantityChange(item.id, text)
                         }
@@ -575,15 +435,18 @@ const CartScreen = () => {
                     </View>
                   </View>
                 </View>
-                <MaterialIcons
-                  name="delete"
-                  size={24}
-                  color={Colors.primaryColor}
-                  onPress={() => {
-                    // handleProductDelete(item.id)
-                  }}
-                />
               </View>
+
+              {/* Delete Icon */}
+              <MaterialIcons
+                name="delete"
+                size={24}
+                color={Colors.primaryColor}
+                onPress={() => {
+                  // handleProductDelete(item.id)
+                }}
+                style={styles.deleteIcon}
+              />
             </View>
           </View>
         ))}
@@ -774,6 +637,50 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
+  },
+  deliveryCard: {
+    backgroundColor: Colors.whiteColor,
+    borderRadius: 15, // Rounded edges
+    padding: 15,
+    marginVertical: 10,
+    marginHorizontal: 5, // Added left & right spacing
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4, // Android shadow effect
+  },
+  deliveryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconContainer: {
+    backgroundColor: "#f2f2f2",
+    borderRadius: 25,
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
+  iconStyle: {
+    height: 50,
+    width: 50,
+  },
+  addressContent: {
+    flex: 1,
+  },
+  addressRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  labelText: {
+    ...Fonts.primaryColor17Regular,
+  },
+  addressText: {
+    ...Fonts.primaryColor18Medium,
+    flexShrink: 1, // Prevents overflow
   },
   deliveredAddresInfoWrapStyle: {
     backgroundColor: "#fff",
@@ -1001,8 +908,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: Colors.whiteColor,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
     paddingVertical: Sizes.fixPadding * 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
@@ -1011,67 +918,137 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardContainer: {
-    paddingHorizontal: 15,
-    marginVertical: 10,
-  },
-  cartItemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 12,
+    backgroundColor: Colors.whiteColor,
+    borderRadius: 12, // Rounded corners
+    padding: Sizes.fixPadding * 2,
+    marginBottom: 15, // Spacing between cards
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 3, // Shadow for Android
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1, // Ensures the layout stretches
   },
   productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 8, // Rounded image
   },
-  productDetails: {
+  productInfo: {
+    marginLeft: Sizes.fixPadding,
     flex: 1,
   },
   productName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    ...Fonts.primaryColor19Medium,
+    lineHeight: 24,
   },
-  productManufacturer: {
-    fontSize: 14,
-    color: "#777",
-    marginVertical: 2,
+  manufacturerText: {
+    ...Fonts.primaryColor18Regular,
+    color: "#777", // Subtle text color
   },
   productDetail: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 5,
+    ...Fonts.primaryColor19Medium,
   },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#ff6600",
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 5,
+  },
+  priceText: {
+    ...Fonts.primaryColor25Medium,
+    fontWeight: "bold",
   },
   quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
+  },
+  quantityLabel: {
+    ...Fonts.primaryColor19Medium,
+    marginRight: 5,
   },
   quantityInput: {
+    backgroundColor: "#F7F7F7",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 35,
-    width: 50,
+    borderColor: Colors.primaryColor,
+    borderRadius: 6,
+    paddingHorizontal: 8,
     textAlign: "center",
+    width: 50,
+    height: 35,
     fontSize: 16,
   },
   deleteIcon: {
-    marginLeft: 10,
+    marginLeft: 10, // Spacing from text
+  },
+  addMoreItemsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryColor, // Main button color
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25, // Fully rounded corners
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5, // Shadow for Android
+    marginTop: 15, // Add spacing
+  },
+  addMoreItemsText: {
+    ...Fonts.whiteColor19Medium,
+    marginRight: 10, // Space between text & icon
+  },
+  addIconContainer: {
+    backgroundColor: "#F0F0F0", // Light grey background for contrast
+    width: 28,
+    height: 28,
+    borderRadius: 14, // Perfect circle
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cartSummaryContainer: {
+    backgroundColor: Colors.whiteColor,
+    padding: Sizes.fixPadding * 2,
+    borderRadius: 12, // Rounded corners for a card effect
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4, // Shadow for Android
+    marginVertical: 10, // Spacing around the card
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  labelText: {
+    ...Fonts.primaryColor18Regular,
+    opacity: 0.8, // Lightened text for subtlety
+  },
+  valueText: {
+    ...Fonts.primaryColor19Medium,
+  },
+  totalLabel: {
+    ...Fonts.primaryColor19Medium,
+    fontWeight: "bold", // Emphasizing total amount
+  },
+  totalValue: {
+    ...Fonts.primaryColor19Medium,
+    fontWeight: "bold",
+    color: Colors.primaryColor, // Highlighting the final payable amount
   },
 });
 

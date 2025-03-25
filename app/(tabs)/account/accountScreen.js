@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from "react";
+import React, { useState, useContext, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -25,22 +25,25 @@ import {
   Target,
 } from "lucide-react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { AppContext } from "../../context/AppProvider";
+import { useAppContext } from "../../context/AppProvider";
 
 const { width } = Dimensions.get("screen");
 
+console.log("Account Screen Rendered");
+
 const AccountScreen = () => {
   const navigation = useNavigation();
-  const { loggedInUser } = useContext(AppContext);
+  // Assuming `userRole` holds the current user's role
+
+  const { loggedInUser } = useAppContext();
+  const memoizedUser = useMemo(() => loggedInUser, [loggedInUser]);
+
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log("AccountScreen Loaded");
-      return () => console.log("AccountScreen Unloaded");
-    }, [])
-  );
+  useEffect(() => {
+    console.log("LoggedInUser in AccountScreen:", loggedInUser);
+  }, [loggedInUser]); // Log whenever loggedInUser changes
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => (prev[section] ? {} : { [section]: true }));
@@ -93,16 +96,6 @@ const AccountScreen = () => {
       ],
     },
     {
-      title: "Finance & Payments",
-      items: [
-        {
-          title: "Payments Information",
-          icon: <CreditCard size={24} color="#10857F" />,
-          screen: "adminPanel/PaymentsInformationScreen",
-        },
-      ],
-    },
-    {
       title: "Settings & Configurations",
       items: [
         {
@@ -119,6 +112,32 @@ const AccountScreen = () => {
     },
   ];
 
+  const filterMenuItems = (menuItems, role) => {
+    return menuItems
+      .map((section) => {
+        let filteredItems = section.items.filter((item) => {
+          if (role === "SUPERADMIN") return true;
+          if (role === "ADMIN")
+            return section.title !== "Settings & Configurations";
+          if (role === "CUSTOMER")
+            return ["Orders", "Feedback", "Payments"].includes(item.title);
+          return false; // Unknown role sees nothing
+        });
+
+        return filteredItems.length > 0
+          ? { ...section, items: filteredItems }
+          : null;
+      })
+      .filter(Boolean);
+  };
+
+  // Determine user role (Modify if needed)
+  //const userRole = loggedInUser.isAdmin === "1" ? "SUPERADMIN" : "CUSTOMER";
+  const userRole = "CUSTOMER";
+
+  // Ensure `groupedMenuItems` exists before filtering
+  const filteredMenuItems = filterMenuItems(groupedMenuItems, userRole);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -128,18 +147,32 @@ const AccountScreen = () => {
           color="white"
           onPress={() => navigation.goBack()}
         />
-        <Text style={styles.headerText}>Admin Panel</Text>
+        <Text style={styles.headerText}>Account</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Card style={styles.profileCard}>
+          {/* Name in center */}
           <Text style={styles.name}>
-            {loggedInUser.firstName} {loggedInUser.lastName}
+            {memoizedUser.firstName} {memoizedUser.lastName}
           </Text>
-          <Text style={styles.email}>{loggedInUser.businessName}</Text>
+
+          {/* Business Name below the Name */}
+          <Text style={styles.business}>{loggedInUser.businessName}</Text>
+
+          {/* Phone Number & Status in the same row */}
+          <View style={styles.rowContainer}>
+            <Text style={styles.phoneNumber}>
+              📞 {loggedInUser.phoneNumber}
+            </Text>
+            <Text style={styles.status}>🟢 {loggedInUser.status}</Text>
+          </View>
+
+          {/* Comments in the last line */}
+          <Text style={styles.comments}>💬 {loggedInUser.comments}</Text>
         </Card>
 
-        {groupedMenuItems.map((section, index) => (
+        {filteredMenuItems.map((section, index) => (
           <View key={index}>
             <TouchableOpacity
               style={styles.sectionHeader}
@@ -152,7 +185,7 @@ const AccountScreen = () => {
                 <TouchableOpacity
                   key={idx}
                   style={styles.menuItem}
-                  onPress={() => navigation.navigate(item.screen)}
+                  onPress={() => navigation.push(item.screen)}
                 >
                   <View style={styles.menuIcon}>{item.icon}</View>
                   <Text style={styles.menuText}>{item.title}</Text>
@@ -181,13 +214,56 @@ const styles = StyleSheet.create({
   },
   scrollContainer: { paddingBottom: 30 },
   profileCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 20,
-    margin: 15,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    margin: 10,
+    alignItems: "center", // Centers the name and business name
   },
-  name: { fontSize: 18, fontWeight: "bold", textAlign: "center" },
-  email: { fontSize: 14, textAlign: "center", color: "#777" },
+  name: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+    textAlign: "center", // Center text
+  },
+  business: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 10,
+    textAlign: "center", // Center text
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  phoneNumber: {
+    fontSize: 14,
+    color: "#007BFF",
+    flex: 1,
+    textAlign: "left", // Align left
+  },
+  status: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#28a745",
+    flex: 1,
+    textAlign: "right", // Align right
+  },
+  comments: {
+    fontSize: 14,
+    color: "#555",
+    fontStyle: "italic",
+    textAlign: "center", // Center comments
+  },
   sectionHeader: {
     backgroundColor: "#10857F",
     padding: 15,

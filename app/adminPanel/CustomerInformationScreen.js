@@ -25,15 +25,32 @@ const CustomerInformationScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [customerApiData, setCustomerApiData] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [selectedMetaData, setSelectedMetaData] = useState([]);
+  const [selectedMetaData, setSelectedMetaData] = useState([
+    {
+      isCreditAllowed: "No", // Default value to avoid undefined
+      customerDiscount: "",
+      customerTargets: [],
+    },
+  ]);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedData, setEditedData] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
 
   const [state, setState] = useState({
     showSuccessDialog: false,
   });
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
   const { showSuccessDialog } = state;
+
+  useEffect(() => {
+    // Ensure the tab bar is visible when this screen is mounted
+    navigation.getParent()?.setOptions({ tabBarStyle: { display: "flex" } });
+
+    return () => {
+      // Reset tab bar when leaving the screen
+      navigation.getParent()?.setOptions({ tabBarStyle: { display: "none" } });
+    };
+  }, []);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -54,6 +71,20 @@ const CustomerInformationScreen = () => {
     setEditedData(customer);
     setEditModalVisible(true);
     setSelectedMetaData(JSON.parse(customer.metaData));
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query) {
+      const filtered = customerApiData.filter((item) =>
+        `${item.firstName} ${item.lastName}`
+          .toLowerCase()
+          .includes(query.toLowerCase())
+      );
+      setFilteredData(filtered);
+    } else {
+      setFilteredData([]);
+    }
   };
 
   const handleTargetChange = async (targetValue, text) => {
@@ -151,16 +182,48 @@ const CustomerInformationScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
-      <View style={{ flex: 1 }}>
-        {header()}
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.headerWrapStyle}>
         <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() => navigation.navigate("home/homeScreen")}
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
         >
-          <Text style={{ ...Fonts.whiteColor16Regular }}>Save</Text>
+          <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Card
+        <Text style={styles.headerTitle}>Customers</Text>
+      </View>
+
+      {/* Inventory Information Header */}
+      <Card style={styles.infoHeader}>
+        <Text style={styles.infoHeaderText}>Customer Information</Text>
+      </Card>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <MaterialIcons
+            name="search"
+            size={24}
+            color="#10857F"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            placeholder="Search Customers" // Use placeholder instead of label
+            placeholderTextColor="#888" // Light gray placeholder color
+            value={searchQuery}
+            onChangeText={handleSearch}
+            style={styles.searchInput}
+          />
+        </View>
+      </View>
+
+      <ScrollView
+        automaticallyAdjustKeyboardInsets={true}
+        showsVerticalScrollIndicator={false}
+        style={styles.container}
+      >
+        <FlatList
           style={{
             padding: 5,
             borderRadius: 20,
@@ -168,175 +231,146 @@ const CustomerInformationScreen = () => {
             backgroundColor: "#FFFFFF",
             margin: 10,
           }}
-        >
-          <Text
-            style={{
-              fontSize: 22,
-              fontWeight: "bold",
-              color: "#10857F",
-              marginBottom: 5,
-              textAlign: "center",
-            }}
-          >
-            Customers
-          </Text>
-        </Card>
-        <ScrollView
-          automaticallyAdjustKeyboardInsets={true}
-          showsVerticalScrollIndicator={false}
-          style={styles.container}
-        >
-          <FlatList
-            style={{
-              padding: 5,
-              borderRadius: 20,
-              elevation: 5,
-              backgroundColor: "#FFFFFF",
-              margin: 10,
-            }}
-            data={customerApiData.filter((customer) =>
-              customer.firstName
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase())
-            )}
-            keyExtractor={(item) => item.id.toString()}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleEdit(item)}>
-                <View style={styles.card}>
-                  <View style={styles.avatarContainer}>
-                    <Text style={styles.avatarText}>
-                      {item.firstName.charAt(0)}
-                      {item.lastName.charAt(0)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.detailsContainer}>
-                    <Text style={styles.name}>
-                      {item.firstName} {item.lastName}
-                    </Text>
-                    <Text style={styles.businessName}>{item.businessName}</Text>
-
-                    {/* Phone Number and Status in one line */}
-                    <View style={styles.rowContainer}>
-                      <Text style={styles.contact}>
-                        Phone: {item.phoneNumber}
-                      </Text>
-                      <Text style={styles.infoText}>Status: {item.status}</Text>
-                    </View>
-
-                    <View style={styles.rowContainer}>
-                      <Text style={styles.contact}>
-                        GST: {item.gstInformation?.gstnumber}
-                      </Text>
-                      <Text style={styles.contact}>
-                        Onboarded:{" "}
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
+          data={filteredData.length > 0 ? filteredData : customerApiData}
+          keyExtractor={(item) => item.id.toString()}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleEdit(item)}>
+              <View style={styles.card}>
+                <View style={styles.avatarContainer}>
+                  <Text style={styles.avatarText}>
+                    {item.firstName.charAt(0)}
+                    {item.lastName.charAt(0)}
+                  </Text>
                 </View>
-              </TouchableOpacity>
-            )}
-          />
-          <Modal visible={editModalVisible} animationType="slide" transparent>
-            <View style={styles.modalBackground}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Edit Customer</Text>
 
-                <TextInput
-                  style={styles.input}
-                  value={editedData.firstName}
-                  editable={false}
-                  onChangeText={(text) =>
-                    setEditedData({ ...editedData, firstName: text })
-                  }
-                  placeholder="First Name"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editedData.lastName}
-                  editable={false}
-                  onChangeText={(text) =>
-                    setEditedData({ ...editedData, lastName: text })
-                  }
-                  placeholder="Last Name"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editedData.phoneNumber}
-                  editable={false}
-                  onChangeText={(text) =>
-                    setEditedData({ ...editedData, phoneNumber: text })
-                  }
-                  placeholder="Phone Number"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={`${selectedMetaData.customerDiscount}%`}
-                  onChangeText={(text) =>
-                    setEditedData({
-                      ...selectedMetaData,
-                      customerDiscount: text,
-                    })
-                  }
-                  placeholder="Customer Discount"
-                />
+                <View style={styles.detailsContainer}>
+                  <Text style={styles.name}>
+                    {item.firstName} {item.lastName}
+                  </Text>
+                  <Text style={styles.businessName}>{item.businessName}</Text>
 
-                {/* Credit Allowed Dropdown */}
-                <Text style={styles.label}>Credit Allowed</Text>
-                <Picker
-                  selectedValue={selectedMetaData.isCreditAllowed}
-                  onValueChange={(itemValue) =>
-                    setEditedData({
-                      ...selectedMetaData,
-                      isCreditAllowed: itemValue,
-                    })
-                  }
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Yes" value="Yes" />
-                  <Picker.Item label="No" value="No" />
-                </Picker>
+                  {/* Phone Number and Status in one line */}
+                  <View style={styles.rowContainer}>
+                    <Text style={styles.contact}>
+                      Phone: {item.phoneNumber}
+                    </Text>
+                    <Text style={styles.infoText}>Status: {item.status}</Text>
+                  </View>
 
-                <Text style={styles.modalTitle}>Targets</Text>
-                {(selectedMetaData?.customerTargets || []).map(
-                  (target, index) => (
-                    <View key={index} style={styles.targetContainer}>
-                      <Text style={styles.targetTitle}>
-                        {target.targetType} Target
-                      </Text>
-                      <TextInput
-                        style={styles.input}
-                        value={target.targetValue}
-                        onChangeText={(text) =>
-                          handleTargetChange(target.targetValue, text)
-                        }
-                        placeholder="Target Value"
-                      />
-                    </View>
-                  )
-                )}
-
-                <View style={styles.modalButtonContainer}>
-                  <TouchableOpacity
-                    style={styles.modalButton}
-                    onPress={() => updateCustomer()}
-                  >
-                    <Text style={styles.modalButtonText}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalButtonCancel}
-                    onPress={() => setEditModalVisible(false)}
-                  >
-                    <Text style={styles.modalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
+                  <View style={styles.rowContainer}>
+                    <Text style={styles.contact}>
+                      GST: {item.gstInformation?.gstnumber}
+                    </Text>
+                    <Text style={styles.contact}>
+                      Onboarded: {new Date(item.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
                 </View>
               </View>
+            </TouchableOpacity>
+          )}
+        />
+        <Modal visible={editModalVisible} animationType="slide" transparent>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Edit Customer</Text>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                value={editedData.firstName}
+                editable={false}
+                onChangeText={(text) =>
+                  setEditedData({ ...editedData, firstName: text })
+                }
+                placeholder="First Name"
+              />
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                value={editedData.lastName}
+                editable={false}
+                onChangeText={(text) =>
+                  setEditedData({ ...editedData, lastName: text })
+                }
+                placeholder="Last Name"
+              />
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={styles.input}
+                value={editedData.phoneNumber}
+                editable={false}
+                onChangeText={(text) =>
+                  setEditedData({ ...editedData, phoneNumber: text })
+                }
+                placeholder="Phone Number"
+              />
+              <Text style={styles.label}>Customer Discount (%)</Text>
+              <TextInput
+                style={styles.input}
+                value={selectedMetaData.customerDiscount}
+                onChangeText={(text) =>
+                  setSelectedMetaData({
+                    ...selectedMetaData,
+                    customerDiscount: text,
+                  })
+                }
+                placeholder="Customer Discount"
+              />
+
+              {/* Credit Allowed Dropdown */}
+              <Text style={styles.label}>Credit Allowed</Text>
+              <Picker
+                selectedValue={selectedMetaData.isCreditAllowed ?? "No"} // Ensuring it never becomes undefined
+                onValueChange={(itemValue) =>
+                  setSelectedMetaData({
+                    ...selectedMetaData,
+                    isCreditAllowed: itemValue,
+                  })
+                }
+                style={styles.picker}
+              >
+                <Picker.Item label="Yes" value="Yes" />
+                <Picker.Item label="No" value="No" />
+              </Picker>
+
+              <Text style={styles.modalTitle}>Targets</Text>
+              {(selectedMetaData?.customerTargets || []).map(
+                (target, index) => (
+                  <View key={index} style={styles.targetContainer}>
+                    <Text style={styles.targetTitle}>
+                      {target.targetType} Target
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      value={target.targetValue}
+                      onChangeText={(text) =>
+                        handleTargetChange(target.targetValue, text)
+                      }
+                      placeholder="Target Value"
+                    />
+                  </View>
+                )
+              )}
+
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => updateCustomer()}
+                >
+                  <Text style={styles.modalButtonText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalButtonCancel}
+                  onPress={() => setEditModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </Modal>
-        </ScrollView>
-      </View>
+          </View>
+        </Modal>
+      </ScrollView>
       {successDialog()}
     </View>
   );
@@ -354,16 +388,36 @@ const styles = {
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff", // Optional: Ensures a clean background
-    // paddingHorizontal: 20,
+    backgroundColor: "#F4F7F9",
   },
   headerWrapStyle: {
-    backgroundColor: Colors.primaryColor,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    height: 56.0,
-    paddingHorizontal: Sizes.fixPadding * 2.0,
+    backgroundColor: "#10857F",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    marginRight: 10, // Ensures spacing between icon & title
+  },
+  headerTitle: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "left",
+  },
+  infoHeader: {
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: "white",
+    margin: 15,
+    elevation: 4,
+    alignItems: "center",
+  },
+  infoHeaderText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#10857F",
   },
   rowContainer: {
     flexDirection: "row",
@@ -621,6 +675,29 @@ const styles = {
     marginBottom: 5,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  searchContainer: {
+    padding: 15,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#10857F",
+    paddingHorizontal: 10,
+    height: 60, // Increased height
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: "white",
+    fontSize: 18, // Slightly larger font for better visibility
+    color: "#10857F",
   },
 };
 

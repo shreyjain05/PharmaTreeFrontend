@@ -381,8 +381,8 @@ const orderSummaryScreen = () => {
   function deliverdAddressAndPaymentInfo() {
     const [payNow, setPayNow] = useState(true);
     const [selectedPaymentOption, setSelectedPaymentOption] = useState("full");
+    console.log("Customer Credit is allowed: ", isCreditAllowed);
 
-    // Compute the amount based on selection
     const totalAmount = total() - discountAmount() - userRoyalty;
     const payableAmount =
       selectedPaymentOption === "50"
@@ -391,64 +391,103 @@ const orderSummaryScreen = () => {
         ? Math.round(totalAmount * 0.7)
         : totalAmount; // Full amount by default
 
+    // Determine if Pay Later is allowed
+    const allowPayLater = isCreditAllowed === "Yes" && totalAmount > 4000;
+
+    // Adjust payment options based on credit and amount constraints
+    const availablePaymentOptions =
+      totalAmount < 4000 || isCreditAllowed !== "Yes"
+        ? ["cod", "full"]
+        : ["cod", "50", "70", "full"];
+
     return (
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Toggle for Pay Now / Pay Later */}
-        {isCreditAllowed === "Yes" && totalAmount > 4000 && (
+        {allowPayLater && (
           <View style={styles.paymentToggleContainer}>
-            <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Now</Text>
+            <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Later</Text>
             <Switch
               value={payNow}
               onValueChange={() => setPayNow(!payNow)}
-              thumbColor={payNow ? "#10857F" : "#10857F"} // Always teal
-              trackColor={{ true: "#10857F" }} // Always teal when active
+              thumbColor="#10857F"
+              trackColor={{ true: "#10857F" }}
             />
-            <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Later</Text>
+            <Text style={{ ...Fonts.primaryColor18Medium }}>Pay Now</Text>
           </View>
         )}
 
-        {/* Radio Buttons for Pay Now options */}
+        {/* Payment Options (Shown only when Pay Now is selected) */}
         {payNow && (
           <View style={styles.radioButtonContainer}>
             <Text style={{ ...Fonts.primaryColor18Medium }}>
               Select Payment Option
             </Text>
-
             <RadioButton.Group
               onValueChange={(newValue) => setSelectedPaymentOption(newValue)}
               value={selectedPaymentOption}
             >
-              <View style={styles.radioButton}>
-                <RadioButton value="50" color="#10857F" />
-                <Text>50% (₹{Math.round(totalAmount * 0.5)})</Text>
-              </View>
-              <View style={styles.radioButton}>
-                <RadioButton value="70" color="#10857F" />
-                <Text>70% (₹{Math.round(totalAmount * 0.7)})</Text>
-              </View>
-              <View style={styles.radioButton}>
-                <RadioButton value="full" color="#10857F" />
-                <Text>Full Amount (₹{totalAmount})</Text>
-              </View>
+              {availablePaymentOptions.includes("cod") && (
+                <View style={styles.radioButton}>
+                  <RadioButton value="cod" color="#10857F" />
+                  <Text>Cash on Delivery</Text>
+                </View>
+              )}
+              {availablePaymentOptions.includes("50") && (
+                <View style={styles.radioButton}>
+                  <RadioButton value="50" color="#10857F" />
+                  <Text>50% (₹{Math.round(totalAmount * 0.5)})</Text>
+                </View>
+              )}
+              {availablePaymentOptions.includes("70") && (
+                <View style={styles.radioButton}>
+                  <RadioButton value="70" color="#10857F" />
+                  <Text>70% (₹{Math.round(totalAmount * 0.7)})</Text>
+                </View>
+              )}
+              {availablePaymentOptions.includes("full") && (
+                <View style={styles.radioButton}>
+                  <RadioButton value="full" color="#10857F" />
+                  <Text>Full Amount (₹{totalAmount})</Text>
+                </View>
+              )}
             </RadioButton.Group>
           </View>
         )}
 
-        {/* Final Payment Button */}
-        {/* {totalAmountAndPaymentButton()} */}
-        {/* Updated Total Amount & Payment Button */}
+        {/* Total Amount & Payment Buttons */}
         <View style={styles.totalAmountContainer}>
           <Text style={{ ...Fonts.primaryColor25Medium }}>
             ₹{payNow ? payableAmount : totalAmount}
           </Text>
-          <TouchableOpacity
-            activeOpacity={0.6}
-            style={styles.proceedToPaymentButtonStyle}
-          >
-            <Text style={{ ...Fonts.whiteColor19Medium }}>
-              Proceed to Payment
-            </Text>
-          </TouchableOpacity>
+
+          {/* Show only "Submit Order" if Pay Later is selected */}
+          {!payNow ? (
+            <TouchableOpacity
+              activeOpacity={0.6}
+              style={styles.cashOnDeliveryButtonStyle}
+              onPress={() => alert("Order Submitted with Pay Later")}
+            >
+              <Text style={{ ...Fonts.whiteColor19Medium }}>Submit Order</Text>
+            </TouchableOpacity>
+          ) : selectedPaymentOption === "cod" ? (
+            <TouchableOpacity
+              activeOpacity={0.6}
+              style={styles.cashOnDeliveryButtonStyle}
+              onPress={() => alert("Order Submitted with Cash on Delivery")}
+            >
+              <Text style={{ ...Fonts.whiteColor19Medium }}>Submit Order</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.6}
+              style={styles.proceedToPaymentButtonStyle}
+              onPress={() => alert("Proceeding to Payment")}
+            >
+              <Text style={{ ...Fonts.whiteColor19Medium }}>
+                Proceed to Payment
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     );
@@ -593,16 +632,20 @@ const orderSummaryScreen = () => {
             <Text style={{ ...Fonts.primaryColor19Medium }}>₹{total()}</Text>
           </View>
         </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={{ ...Fonts.primaryColor18Regular }}>
-            Customer Discount ({discount}%)
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={{ ...Fonts.primaryColor19Medium }}>
-              ₹{discountAmount()}
+        {discount > 0 && (
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={{ ...Fonts.primaryColor18Regular }}>
+              Customer Discount ({discount}%)
             </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ ...Fonts.primaryColor19Medium }}>
+                ₹{discountAmount()}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={{ ...Fonts.primaryColor18Regular }}>Wallet Amount</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -772,12 +815,12 @@ const orderSummaryScreen = () => {
     // Generate dummy payment data for all days in February
     const getPayments = () => {
       let payments = {};
-      console.log("Todays date", today);
+      //console.log("Todays date", today);
 
       var currentAmount = total() - discountAmount() - userRoyalty;
       var discount = currentAmount * 0.05;
       var graceDays = parseInt(getConfig());
-      console.log("Grace Days", graceDays);
+      //console.log("Grace Days", graceDays);
       var increment = Math.round(discount / graceDays);
 
       for (let i = 0; i <= 45; i++) {
@@ -1188,6 +1231,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   proceedToPaymentButtonStyle: {
+    backgroundColor: Colors.primaryColor,
+    borderRadius: Sizes.fixPadding - 5.0,
+    paddingVertical: Sizes.fixPadding,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    width: "90%",
+  },
+  cashOnDeliveryButtonStyle: {
     backgroundColor: Colors.primaryColor,
     borderRadius: Sizes.fixPadding - 5.0,
     paddingVertical: Sizes.fixPadding,

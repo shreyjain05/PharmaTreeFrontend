@@ -35,6 +35,10 @@ const DrugLicenseApprovalScreen = () => {
   const [users, setUsers] = useState([]);
   console.log("Current Users:" + JSON.stringify(users));
 
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+
   useEffect(() => {
     fetch(`${BASE_URL}/api/v1/customer`)
       .then((res) => res.json())
@@ -45,6 +49,26 @@ const DrugLicenseApprovalScreen = () => {
       })
       .catch((error) => console.error("Error fetching customers:", error));
   }, []);
+
+  const handleApproval = (userId, status) => {
+    setSelectedUserId(userId);
+    setSelectedStatus(status);
+  };
+
+  useEffect(() => {
+    if (selectedUserId !== null && selectedStatus !== null) {
+      handleApprovalStatus();
+      setApprovalModalVisible(true);
+    }
+  }, [selectedUserId, selectedStatus]);
+
+  const confirmApproval = () => {
+    // Call API or update status here
+    console.log(
+      `Status changed for user ${selectedUserId} to ${selectedStatus}`
+    );
+    setApprovalModalVisible(false);
+  };
 
   function updateCustomer() {
     fetch(`${BASE_URL}/api/v1/customer`)
@@ -77,12 +101,16 @@ const DrugLicenseApprovalScreen = () => {
     );
   }
 
-  function handleApproval(id, status) {
-    console.log("Approving customer", id);
+  function handleApprovalStatus() {
+    console.log("Approving customer", selectedUserId);
     fetch(`${BASE_URL}/api/v1/customer/approval`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customerId: id, approved: status }),
+      body: JSON.stringify({
+        customerId: selectedUserId,
+        approved: selectedStatus,
+        comments: comment,
+      }),
     })
       .then((res) => res.json())
       .then(() => {
@@ -170,7 +198,6 @@ const DrugLicenseApprovalScreen = () => {
               </View>
             </TouchableOpacity>
           </Modal>
-
           <FlatList
             data={users}
             keyExtractor={(item) => item.id.toString()}
@@ -178,14 +205,12 @@ const DrugLicenseApprovalScreen = () => {
               <Card style={styles.card}>
                 {item.status === "INACTIVE" ? (
                   <View style={{ padding: 16 }}>
-                    {/* Centered Name */}
                     <View style={styles.centeredText}>
                       <Text style={styles.nameText}>
                         {item.firstName} {item.lastName}
                       </Text>
                     </View>
 
-                    {/* License Information in Single Line */}
                     <View style={styles.licenseRow}>
                       <Text style={styles.licenseText}>Drug License 20B</Text>
                       <Text style={styles.licenseText}>Drug License 21B</Text>
@@ -204,10 +229,9 @@ const DrugLicenseApprovalScreen = () => {
                       </Text>
                     </View>
 
-                    {/* Action Buttons */}
                     <View style={styles.buttonsContainer}>
                       <TouchableOpacity
-                        onPress={handleApproval(item.id, "Approved")}
+                        onPress={() => handleApproval(item.id, "Approved")}
                         style={styles.button}
                       >
                         <CheckCircle
@@ -219,7 +243,7 @@ const DrugLicenseApprovalScreen = () => {
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={handleApproval(item.id, "Rejected")}
+                        onPress={() => handleApproval(item.id, "Rejected")}
                         style={styles.button}
                       >
                         <XCircle
@@ -231,7 +255,7 @@ const DrugLicenseApprovalScreen = () => {
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={handleApproval(item.id, "Review")}
+                        onPress={() => handleApproval(item.id, "Review")}
                         style={styles.button}
                       >
                         <CheckCircle
@@ -243,10 +267,10 @@ const DrugLicenseApprovalScreen = () => {
                       </TouchableOpacity>
                     </View>
 
-                    {/* Status Text */}
-                    {status && <Text style={styles.statusText}>{status}</Text>}
+                    {status ? (
+                      <Text style={styles.statusText}>{String(status)}</Text>
+                    ) : null}
 
-                    {/* Stylish Comment Box */}
                     <TextInput
                       style={styles.commentBox}
                       placeholder="Add a comment..."
@@ -255,7 +279,6 @@ const DrugLicenseApprovalScreen = () => {
                       placeholderTextColor="#777"
                     />
 
-                    {/* View License Button */}
                     <TouchableOpacity
                       onPress={() => setModalVisible(true)}
                       style={styles.viewButton}
@@ -282,26 +305,38 @@ const DrugLicenseApprovalScreen = () => {
                   </Text>
                 )}
 
-                {/* License Image Modal */}
+                {/* Approval Confirmation Modal */}
                 <Modal
-                  visible={modalVisible}
+                  visible={approvalModalVisible}
                   transparent={true}
-                  onRequestClose={() => setModalVisible(false)}
-                  animationType="fade"
+                  animationType="slide"
                 >
-                  <TouchableOpacity
-                    style={styles.modalBackground}
-                    onPress={() => setModalVisible(false)}
-                  >
+                  <View style={styles.modalBackground}>
                     <View style={styles.modalContainer}>
-                      <Image
-                        source={{
-                          uri: "https://images.unsplash.com/photo-1729505622656-6da75375c3a2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-                        }}
-                        style={styles.largeImage}
-                      />
+                      <Text style={styles.modalTitle}>
+                        Confirm Status Change
+                      </Text>
+                      <Text style={styles.modalText}>
+                        Are you sure you want to change status to{" "}
+                        {selectedStatus}?
+                      </Text>
+
+                      <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                          onPress={confirmApproval}
+                          style={styles.modalButton}
+                        >
+                          <Text style={styles.modalButtonText}>Yes</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setApprovalModalVisible(false)}
+                          style={styles.modalButtonCancel}
+                        >
+                          <Text style={styles.modalButtonText}>No</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 </Modal>
               </Card>
             )}
@@ -585,6 +620,60 @@ const styles = StyleSheet.create({
     width: 300,
     height: 400,
     resizeMode: "contain",
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+  },
+  modalContainer: {
+    width: "80%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5, // Shadow for Android
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    backgroundColor: "#10857F",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  modalButtonCancel: {
+    flex: 1,
+    backgroundColor: "#D32F2F",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
