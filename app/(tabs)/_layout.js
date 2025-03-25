@@ -66,28 +66,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="search/searchScreen"
-          options={{
-            tabBarIcon: ({ color }) => (
-              <MaterialIcons name="search" size={27} color={color} />
-            ),
-            tabBarLabel: "Search",
-          }}
-        />
-        <Tabs.Screen
-          name="notifications/notificationsScreen"
-          options={{
-            tabBarIcon: ({ color }) => (
-              <MaterialIcons name="notifications" size={27} color={color} />
-            ),
-            tabBarLabel: "Notifications",
-          }}
-        />
-        <Tabs.Screen
           name="account/accountScreen"
           options={{
             shallow: true,
             keepStatic: true,
+            unmountOnBlur: false,
             tabBarIcon: ({ color }) => (
               <MaterialIcons name="person" size={27} color={color} />
             ),

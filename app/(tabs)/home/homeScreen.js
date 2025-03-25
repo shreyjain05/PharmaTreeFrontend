@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Colors, Fonts, Sizes } from "../../../constant/styles";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,11 +16,11 @@ import Carousel, { Pagination } from "react-native-snap-carousel-v4";
 import { useNavigation } from "expo-router";
 import { AppContext } from "../../context/AppProvider";
 import { Svg, Circle } from "react-native-svg";
+import { useSelector } from "react-redux";
 
 import defaultProduct from "../../../assets/images/defaultProduct.png";
 
 const { width } = Dimensions.get("window");
-
 const HollowPieChart = ({ achieved, target, color }) => {
   const progress = target > 0 ? achieved / target : 0;
   const percentage = Math.round(progress * 100);
@@ -70,12 +71,11 @@ const HollowPieChart = ({ achieved, target, color }) => {
   );
 };
 
-const TargetProgress = () => {
-  const { metadata } = useContext(AppContext);
-
-  useEffect(() => {
-    console.log("Targets in TargetProgress:", metadata.customerTargets);
-  }, [metadata]);
+const TargetProgress = ({ userInfo }) => {
+  if (!userInfo || !userInfo.metaData) {
+    console.error("userMetadata is undefined or missing metadata");
+    return null; // or return some fallback UI
+  }
 
   const targetColors = {
     Yearly: "#FFC412",
@@ -88,7 +88,11 @@ const TargetProgress = () => {
   const allTargetTypes = ["Monthly", "Quarterly", "HalfYearly", "Yearly"];
 
   let targets =
-    metadata.customerTargets?.filter((target) => target.targetValue > 0) || [];
+    JSON.parse(userInfo.metaData).customerTargets?.filter(
+      (target) =>
+        !isNaN(parseInt(target.targetValue, 10)) &&
+        parseInt(target.targetValue, 10) > 0
+    ) || [];
 
   // Add missing targets with default values
   allTargetTypes.forEach((type) => {
@@ -107,8 +111,6 @@ const TargetProgress = () => {
       allTargetTypes.indexOf(a.targetType) -
       allTargetTypes.indexOf(b.targetType)
   );
-
-  console.log("Final Sorted Customer Targets:", targets);
 
   return (
     <View
@@ -185,24 +187,18 @@ const TargetProgress = () => {
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-
+  const loggedInUser = useSelector((state) => state.auth.loggedInUser);
   const [productApiData, setProductApiData] = useState([]);
 
-  const {
-    products,
-    setLoggedInUser,
-    loggedInUser,
-    wishlistItems,
-    frequentItems,
-    metadata,
-  } = useContext(AppContext);
+  const { products, setLoggedInUser, wishlistItems, frequentItems, metadata } =
+    useContext(AppContext);
 
   useEffect(() => {
     console.log("Products updated in HomeScreen:", products);
   }, [products]); // Runs every time `products` change
 
   useEffect(() => {
-    console.log("loggedInUser in HomeScreen:", loggedInUser);
+    console.log("🟢 LoggedInUser Data:", loggedInUser);
   }, [loggedInUser]); // Runs every time `products` change
 
   useEffect(() => {
@@ -213,6 +209,16 @@ const HomeScreen = () => {
     console.log("frequentItems in HomeScreen:", frequentItems);
   }, [frequentItems]);
 
+  // ✅ Show a loading indicator while waiting for `loggedInUser`
+  if (!loggedInUser) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={Colors.companyPrimary} />
+        <Text>Loading user data...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: Colors.companyLight }}
@@ -222,369 +228,15 @@ const HomeScreen = () => {
       <OfferBanner />
       <Products productApiData={products} navigation={navigation} />
       <WishedProducts productApiData={wishlistItems} navigation={navigation} />
-      {/* {dealsOfTheDayInfo()} */}
       <FrequentlyOrdered
         productApiData={frequentItems}
         navigation={navigation}
       />
-      <TargetProgress />
+
+      {/* ✅ Render TargetProgress only when loggedInUser and customerTargets are available */}
+      <TargetProgress userInfo={loggedInUser} />
     </ScrollView>
   );
-
-  function rateNowButton() {
-    return (
-      <View style={styles.rateNowButtonStyle}>
-        <MaterialIcons name="star-rate" size={24} color={Colors.primaryColor} />
-        <Text
-          style={{
-            ...Fonts.primaryColor19Medium,
-            marginLeft: Sizes.fixPadding,
-          }}
-        >
-          Rate us Now
-        </Text>
-      </View>
-    );
-  }
-
-  function topCategoriesTitle() {
-    return (
-      <View
-        style={{
-          paddingHorizontal: Sizes.fixPadding * 2.0,
-          backgroundColor: Colors.whiteColor,
-          paddingBottom: Sizes.fixPadding - 5.0,
-        }}
-      >
-        <Text
-          style={{
-            ...Fonts.blackColor19Medium,
-            marginTop: Sizes.fixPadding + 3.0,
-            marginBottom: Sizes.fixPadding - 5.0,
-          }}
-        >
-          Top Categories
-        </Text>
-      </View>
-    );
-  }
-
-  function dealsOfTheDayInfo() {
-    const renderItem = ({ item }) => (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() =>
-          navigation.push("productDescription/productDescriptionScreen", {
-            item: JSON.stringify(item),
-            from: "home",
-          })
-        }
-      >
-        <View style={styles.dealsOfTheDayInfoWrapStlye}>
-          <Image
-            source={item.image}
-            style={{ width: 140.0, height: 140.0 }}
-            resizeMode="contain"
-          />
-          <View style={styles.percentageOffWrapStyle}>
-            <Text style={{ ...Fonts.whiteColor16Medium }}>
-              {item.percentageOff}% OFF
-            </Text>
-          </View>
-        </View>
-        <Text
-          numberOfLines={2}
-          style={{
-            marginTop: Sizes.fixPadding,
-            ...Fonts.blackColor19Medium,
-            width: 190.0,
-            lineHeight: 24.0,
-          }}
-        >
-          {item.name}
-        </Text>
-        <View
-          style={{
-            marginTop: Sizes.fixPadding - 17.0,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ ...Fonts.primaryColor25Medium }}>
-            ${item.discountPrice}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-
-    return (
-      <View
-        style={{
-          marginBottom: Sizes.fixPadding * 2.0,
-          backgroundColor: Colors.whiteColor,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            marginTop: Sizes.fixPadding + 3.0,
-            marginHorizontal: Sizes.fixPadding * 2.0,
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text style={{ ...Fonts.blackColor19Medium }}>
-            Frequently Ordered Products
-          </Text>
-          <Text style={{ ...Fonts.primaryColor18Medium }}>View All</Text>
-        </View>
-        <FlatList
-          horizontal
-          data={dealsOfTheDaysList}
-          keyExtractor={(item) => `${item.id}`}
-          renderItem={renderItem}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingLeft: Sizes.fixPadding * 2.0,
-            paddingTop: Sizes.fixPadding,
-            paddingBottom: Sizes.fixPadding * 2.0,
-          }}
-        />
-      </View>
-    );
-  }
-
-  function featuredBrandsInfo() {
-    const renderItem = ({ item }) => (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() =>
-          navigation.push("availableProduct/availableProductScreen")
-        }
-      >
-        <Image
-          source={item.image}
-          style={styles.featuredBrandsImageStyle}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
-    );
-    return (
-      <View
-        style={{
-          marginBottom: Sizes.fixPadding * 2.0,
-          backgroundColor: Colors.whiteColor,
-        }}
-      >
-        <Text
-          style={{
-            ...Fonts.blackColor19Medium,
-            marginTop: Sizes.fixPadding + 3.0,
-            marginHorizontal: Sizes.fixPadding * 2.0,
-          }}
-        >
-          Featured Brands
-        </Text>
-        <FlatList
-          horizontal
-          data={featuredBrandsList}
-          keyExtractor={(item) => `${item.id}`}
-          renderItem={renderItem}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingLeft: Sizes.fixPadding * 2.0,
-            paddingTop: Sizes.fixPadding,
-            paddingBottom: Sizes.fixPadding * 2.0,
-          }}
-        />
-      </View>
-    );
-  }
-
-  function handPickedItemsInfo() {
-    const renderItem = ({ item }) => (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        onPress={() =>
-          navigation.push("productDescription/productDescriptionScreen", {
-            item: JSON.stringify(item),
-            from: "home",
-          })
-        }
-      >
-        <View style={styles.handPickedItemsImageWrapStyle}>
-          {/* <Image
-                        source={item.image}
-                        style={{ width: 140.0, height: 140.0, }}
-                        resizeMode="contain"
-                    /> */}
-          <View style={styles.percentageOffWrapStyle}>
-            <Text style={{ ...Fonts.whiteColor16Medium }}>
-              {item.productInventoryList?.length > 0
-                ? item.productInventoryList[0]?.discount + "% OFF"
-                : ""}
-            </Text>
-          </View>
-        </View>
-        <Text
-          numberOfLines={2}
-          style={{
-            marginTop: Sizes.fixPadding,
-            ...Fonts.blackColor19Medium,
-            width: 190.0,
-            lineHeight: 24.0,
-          }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            ...Fonts.primaryColor18Regular,
-            marginTop: Sizes.fixPadding - 15.0,
-          }}
-        >
-          {item.packingName}
-          {/* {item.tabletsOrCapsulesCount} {item.type} in Bottle */}
-        </Text>
-        <View
-          style={{
-            marginTop: Sizes.fixPadding - 17.0,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ ...Fonts.primaryColor25Medium }}>
-            ${item.saleRate}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-    return (
-      <View
-        style={{
-          marginVertical: Sizes.fixPadding * 2.0,
-          backgroundColor: Colors.whiteColor,
-        }}
-      >
-        <Text
-          style={{
-            ...Fonts.blackColor19Medium,
-            marginTop: Sizes.fixPadding + 3.0,
-            marginHorizontal: Sizes.fixPadding * 2.0,
-          }}
-        >
-          Handpicked Items for You
-        </Text>
-        <FlatList
-          horizontal
-          data={products}
-          keyExtractor={(item) => `${item.id}`}
-          renderItem={renderItem}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingLeft: Sizes.fixPadding * 2.0,
-            paddingTop: Sizes.fixPadding,
-            paddingBottom: Sizes.fixPadding * 2.0,
-          }}
-        />
-      </View>
-    );
-  }
-
-  function orderAndProductInfo() {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginHorizontal: Sizes.fixPadding * 2.0,
-        }}
-      >
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() => navigation.push("orderMedicines/orderMedicinesScreen")}
-          style={{
-            ...styles.orderAndProductInfoStyle,
-            marginRight: Sizes.fixPadding - 5.0,
-          }}
-        >
-          <Image
-            source={require("../../../assets/images/icons/icon_1.png")}
-            style={{ height: 60.0, width: 60.0 }}
-            resizeMode="contain"
-          />
-          <Text style={{ ...Fonts.blackColor17Medium }}>Order Medicines</Text>
-          <Text style={{ ...Fonts.redColor14Regular }}>FLAT 15% OFF</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() => navigation.navigate("healthcare/healthcareScreen")}
-          style={{
-            ...styles.orderAndProductInfoStyle,
-            marginLeft: Sizes.fixPadding - 5.0,
-          }}
-        >
-          <Image
-            source={require("../../../assets/images/icons/icon_2.png")}
-            style={{ height: 60.0, width: 60.0 }}
-            resizeMode="contain"
-          />
-          <Text numberOfLines={1} style={{ ...Fonts.blackColor17Medium }}>
-            Healthcare Products
-          </Text>
-          <Text style={{ ...Fonts.redColor14Regular }}>UPTO 60% OFF</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  function boughtItemAndPastOrderInfo() {
-    return (
-      <View style={styles.boughtItemAndPastOrderInfoWrapStyle}>
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() =>
-            navigation.push("previouslyBoughtItems/previouslyBoughtItemsScreen")
-          }
-          style={{
-            ...styles.boughtItemAndPastOrderInfoStyle,
-            marginRight: Sizes.fixPadding - 5.0,
-          }}
-        >
-          <Image
-            source={require("../../../assets/images/icons/icon_3.png")}
-            style={{ height: 30.0, width: 30.0 }}
-            resizeMode="contain"
-          />
-          <Text
-            numberOfLines={2}
-            style={styles.boughtItemAndPastOrderTextStyle}
-          >
-            1 Previously Bought Item
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() =>
-            navigation.push("previouslyBoughtItems/previouslyBoughtItemsScreen")
-          }
-          style={{
-            ...styles.boughtItemAndPastOrderInfoStyle,
-            marginLeft: Sizes.fixPadding - 5.0,
-          }}
-        >
-          <Image
-            source={require("../../../assets/images/icons/icon_4.png")}
-            style={{ height: 30.0, width: 30.0 }}
-            resizeMode="contain"
-          />
-          <Text style={styles.boughtItemAndPastOrderTextStyle}>
-            1 Past Order
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   function offerBanners() {
     return (
@@ -622,90 +274,6 @@ const HomeScreen = () => {
         dotStyle={styles.sliderActiveDotStyle}
         inactiveDotStyle={styles.sliderInactiveDotStyle}
       />
-    );
-  }
-
-  function headerWithDetail() {
-    return (
-      <View
-        style={{
-          backgroundColor: Colors.primaryColor,
-          padding: Sizes.fixPadding,
-          flexDirection: "column",
-        }}
-      >
-        <View style={styles.headerInfoWrapStyle}>
-          <View>
-            <Text style={{ ...Fonts.whiteColor20Medium }}>HealthMeds</Text>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ ...Fonts.whiteColor15Light }}>Deliver To</Text>
-              <TouchableOpacity
-                activeOpacity={0.6}
-                onPress={() =>
-                  navigation.push("chooseLocation/chooseLocationScreen")
-                }
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginLeft: Sizes.fixPadding - 3.0,
-                }}
-              >
-                <Text style={{ ...Fonts.whiteColor16Medium }}>
-                  99501 Anchorage
-                </Text>
-                <MaterialIcons
-                  name="keyboard-arrow-down"
-                  size={24}
-                  color={Colors.whiteColor}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={{ flexDirection: "row" }}>
-            <MaterialCommunityIcons
-              name="tag"
-              size={26}
-              color={Colors.whiteColor}
-              onPress={() => navigation.push("offers/offersScreen")}
-            />
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={() => navigation.push("cart/cartScreen")}
-            >
-              <MaterialIcons
-                name="shopping-cart"
-                size={26}
-                color={Colors.whiteColor}
-                style={{ marginLeft: Sizes.fixPadding + 10.0 }}
-              />
-              <View style={styles.cartItemCountWrapStyle}>
-                <Text
-                  style={{ ...Fonts.whiteColor15Regular, lineHeight: 21.0 }}
-                >
-                  1
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <TouchableOpacity
-          activeOpacity={0.6}
-          onPress={() => navigation.push("search/searchScreen")}
-          style={styles.searchButtonStyle}
-        >
-          <MaterialIcons name="search" size={22} color={Colors.primaryColor} />
-          <Text
-            numberOfLines={1}
-            style={{
-              ...Fonts.primaryColor18Medium,
-              marginLeft: Sizes.fixPadding,
-              flex: 1,
-            }}
-          >
-            Search medicines/healthcare products
-          </Text>
-        </TouchableOpacity>
-      </View>
     );
   }
 };

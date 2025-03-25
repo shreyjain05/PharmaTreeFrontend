@@ -20,10 +20,14 @@ import { useRoute } from "@react-navigation/native";
 import { AppContext } from "../context/AppProvider";
 import { useRouter } from "expo-router";
 import BASE_URL from "../../constant/variable";
+import { useDispatch } from "react-redux";
+import { setLoggedInUser } from "../../redux/authSlice"; // ✅ Correct import
+
 const { width } = Dimensions.get("screen");
 
 const VerificationScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const route = useRoute();
   const router = useRouter();
 
@@ -32,7 +36,6 @@ const VerificationScreen = () => {
   const {
     products,
     setProducts,
-    setLoggedInUser,
     setFrequentItems,
     setWishlistItems,
     setMetaData,
@@ -67,7 +70,7 @@ const VerificationScreen = () => {
 
   async function handleVerification() {
     if (otpInput.length !== 4) {
-      Alert.alert("Error", "Please enter a valid 4-digit OTP.");
+      console.log.console.log("Error", "Please enter a valid 4-digit OTP.");
       return;
     }
 
@@ -92,25 +95,26 @@ const VerificationScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
-        //Login failed
+        // Login failed
         if (data.status === "FAILED") {
-          Alert.alert("Login Failed", data.message || "Something went wrong.");
+          console.log("Login Failed:", data.message || "Something went wrong.");
+          setIsLoading(false); // ✅ Stop loading if login fails
           return;
         }
 
-        console.log("data from login api, ", data);
-        setLoggedInUser(data.customer);
+        console.log("data from login API:", data);
+        dispatch(setLoggedInUser(data.customer)); // ✅ Store user in Redux
 
         console.log("Is Customer Admin:", data.customer.isAdmin);
         setAdmin(data.customer.admin);
 
-        const frequentProducts = data.customer.frequentProducts;
+        const frequentProducts = data.customer.frequentProducts || [];
         console.log("Frequent Products:", frequentProducts);
 
-        if (frequentProducts != undefined && products != undefined) {
-          // Find matching items from listOne
+        if (frequentProducts.length > 0 && products.length > 0) {
+          // ✅ Corrected from `frequent.includes(...)` to `frequentProducts.includes(...)`
           const matchingItems = products.filter((product) =>
-            frequent.includes(product.id.toString())
+            frequentProducts.includes(product.id.toString())
           );
           console.log("Matching Products:", matchingItems);
           setFrequentItems(matchingItems);
@@ -119,11 +123,10 @@ const VerificationScreen = () => {
         const metaData = JSON.parse(data.customer?.metaData || "{}");
         setMetaData(metaData);
 
-        const wishedProducts = metaData.wishedProducts;
+        const wishedProducts = metaData.wishedProducts || [];
         console.log("Wished Products:", wishedProducts);
 
-        if (wishedProducts != undefined && products != undefined) {
-          // Find matching items from listOne
+        if (wishedProducts.length > 0 && products.length > 0) {
           const matchingItems = products.filter((product) =>
             wishedProducts.includes(product.id.toString())
           );
@@ -131,13 +134,17 @@ const VerificationScreen = () => {
           setWishlistItems(matchingItems);
         }
 
+        setIsLoading(false); // ✅ Stop loading on successful login
         navigation.push("(tabs)");
+      } else {
+        throw new Error("API call failed.");
       }
     } catch (error) {
       setIsLoading(false);
-      Alert.alert("Error", "Network request failed. Please try again.");
-      // navigation.push('(tabs)')
-      // navigation.push("(tabs)");
+      console.log(
+        "Error:",
+        error.message || "Network request failed. Please try again."
+      );
     }
   }
 

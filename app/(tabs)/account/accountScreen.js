@@ -1,54 +1,46 @@
-import React, { useState, useContext, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Dimensions,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { Card } from "react-native-paper";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
 import {
   User,
   ListChecks,
   PlusCircle,
   Upload,
-  CreditCard,
-  FileText,
   Package,
-  Percent,
-  CreditCardIcon,
-  Info,
-  Clock,
   Target,
+  Clock,
 } from "lucide-react-native";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useAppContext } from "../../context/AppProvider";
-
-const { width } = Dimensions.get("screen");
-
-console.log("Account Screen Rendered");
 
 const AccountScreen = () => {
   const navigation = useNavigation();
-  // Assuming `userRole` holds the current user's role
-
-  const { loggedInUser } = useAppContext();
-  const memoizedUser = useMemo(() => loggedInUser, [loggedInUser]);
-
-  const [logoutVisible, setLogoutVisible] = useState(false);
+  const loggedInUser = useSelector((state) => state.auth.loggedInUser); // ✅ Get user from Redux
   const [expandedSections, setExpandedSections] = useState({});
 
   useEffect(() => {
     console.log("LoggedInUser in AccountScreen:", loggedInUser);
-  }, [loggedInUser]); // Log whenever loggedInUser changes
+  }, [loggedInUser]);
 
-  const toggleSection = (section) => {
-    setExpandedSections((prev) => (prev[section] ? {} : { [section]: true }));
-  };
+  // ✅ Show loader while `loggedInUser` is null
+  if (!loggedInUser) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#10857F" />
+        <Text>Loading user data...</Text>
+      </View>
+    );
+  }
 
+  // ✅ Filtered menu items based on role
   const groupedMenuItems = [
     {
       title: "Customer Management",
@@ -67,11 +59,6 @@ const AccountScreen = () => {
           title: "Orders",
           icon: <PlusCircle size={24} color="#10857F" />,
           screen: "adminPanel/OrderInformationScreen",
-        },
-        {
-          title: "Feedback",
-          icon: <PlusCircle size={24} color="#10857F" />,
-          screen: "adminPanel/FeedbackScreen",
         },
       ],
     },
@@ -103,15 +90,14 @@ const AccountScreen = () => {
           icon: <Clock size={24} color="#10857F" />,
           screen: "adminPanel/GracePeriodSettingScreen",
         },
-        {
-          title: "License Approval",
-          icon: <Target size={24} color="#10857F" />,
-          screen: "adminPanel/DrugLicenseApprovalScreen",
-        },
       ],
     },
   ];
 
+  // ✅ Determine user role (Modify if needed)
+  const userRole = loggedInUser.isAdmin;
+
+  // ✅ Filter menu items based on role
   const filterMenuItems = (menuItems, role) => {
     return menuItems
       .map((section) => {
@@ -120,7 +106,7 @@ const AccountScreen = () => {
           if (role === "ADMIN")
             return section.title !== "Settings & Configurations";
           if (role === "CUSTOMER")
-            return ["Orders", "Feedback", "Payments"].includes(item.title);
+            return ["Orders", "Customer Information"].includes(item.title);
           return false; // Unknown role sees nothing
         });
 
@@ -131,12 +117,12 @@ const AccountScreen = () => {
       .filter(Boolean);
   };
 
-  // Determine user role (Modify if needed)
-  //const userRole = loggedInUser.isAdmin === "1" ? "SUPERADMIN" : "CUSTOMER";
-  const userRole = "CUSTOMER";
-
-  // Ensure `groupedMenuItems` exists before filtering
   const filteredMenuItems = filterMenuItems(groupedMenuItems, userRole);
+
+  // Toggle sections open/closed
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => (prev[section] ? {} : { [section]: true }));
+  };
 
   return (
     <View style={styles.container}>
@@ -152,15 +138,11 @@ const AccountScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Card style={styles.profileCard}>
-          {/* Name in center */}
           <Text style={styles.name}>
-            {memoizedUser.firstName} {memoizedUser.lastName}
+            {loggedInUser.firstName} {loggedInUser.lastName}
           </Text>
-
-          {/* Business Name below the Name */}
           <Text style={styles.business}>{loggedInUser.businessName}</Text>
 
-          {/* Phone Number & Status in the same row */}
           <View style={styles.rowContainer}>
             <Text style={styles.phoneNumber}>
               📞 {loggedInUser.phoneNumber}
@@ -168,7 +150,6 @@ const AccountScreen = () => {
             <Text style={styles.status}>🟢 {loggedInUser.status}</Text>
           </View>
 
-          {/* Comments in the last line */}
           <Text style={styles.comments}>💬 {loggedInUser.comments}</Text>
         </Card>
 
@@ -180,6 +161,7 @@ const AccountScreen = () => {
             >
               <Text style={styles.sectionTitle}>{section.title}</Text>
             </TouchableOpacity>
+
             {expandedSections[section.title] &&
               section.items.map((item, idx) => (
                 <TouchableOpacity
@@ -200,6 +182,7 @@ const AccountScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f4f4f4" },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     backgroundColor: "#10857F",
     flexDirection: "row",
@@ -223,21 +206,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
     margin: 10,
-    alignItems: "center", // Centers the name and business name
+    alignItems: "center",
   },
-  name: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
-    textAlign: "center", // Center text
-  },
-  business: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 10,
-    textAlign: "center", // Center text
-  },
+  name: { fontSize: 20, fontWeight: "bold", color: "#333", marginBottom: 5 },
+  business: { fontSize: 16, color: "#666", marginBottom: 10 },
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -245,24 +217,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 8,
   },
-  phoneNumber: {
-    fontSize: 14,
-    color: "#007BFF",
-    flex: 1,
-    textAlign: "left", // Align left
-  },
+  phoneNumber: { fontSize: 14, color: "#007BFF", flex: 1, textAlign: "left" },
   status: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#28a745",
     flex: 1,
-    textAlign: "right", // Align right
+    textAlign: "right",
   },
   comments: {
     fontSize: 14,
     color: "#555",
     fontStyle: "italic",
-    textAlign: "center", // Center comments
+    textAlign: "center",
   },
   sectionHeader: {
     backgroundColor: "#10857F",
