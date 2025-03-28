@@ -183,7 +183,7 @@ const SigninScreen = () => {
         containerStyle={styles.phoneNumberTextFieldStyle}
         flagStyle={{
           width: 30,
-          height: 20,
+          height: 50,
           marginRight: 10,
           alignSelf: "center",
         }} // Align flag properly

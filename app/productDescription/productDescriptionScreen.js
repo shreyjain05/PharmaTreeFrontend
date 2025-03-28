@@ -20,6 +20,7 @@ import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { Bold } from "lucide-react-native";
 import { AppContext } from "../context/AppProvider";
 import BASE_URL from "../../constant/variable";
+import { Card, Dialog } from "react-native-paper";
 
 const { width } = Dimensions.get("screen");
 
@@ -55,6 +56,8 @@ const ProductDescriptionScreen = () => {
     ],
     activeSlide: 0,
     selectedInventory: null, // Track the selected inventory item
+    showSuccessDialog: false,
+    logout: false,
   });
 
   const onBuyItem = (item, product) => {
@@ -158,6 +161,11 @@ const ProductDescriptionScreen = () => {
       ...prevItems,
       { id: prevItems.length + 1, name: `Item ${prevItems.length + 1}` },
     ]);
+
+    updateState({ showSuccessDialog: true });
+    setTimeout(() => {
+      updateState({ showSuccessDialog: false });
+    }, 2000);
   };
 
   const onAddItemToWishList = async (userData, product) => {
@@ -200,17 +208,27 @@ const ProductDescriptionScreen = () => {
 
       const updateData = await updateResponse.json();
       console.log("Update Successful:", updateData);
+      updateState({ showSuccessDialog: true });
+      setTimeout(() => {
+        updateState({ showSuccessDialog: false });
+      }, 2000);
     } catch (error) {
       console.error("Error:", error);
     }
   };
+
+  const isCustomerActive = () => {
+    return loggedInUser?.status === "ACTIVE";
+  };
+
+  const [isSelected, setIsSelected] = useState(false);
 
   const [isInventorySelected, setIsInventorySelected] = useState(null);
   const [quantity, setQuantity] = useState(0);
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
 
-  const { productImages, activeSlide } = state;
+  const { productImages, activeSlide, showSuccessDialog, logout } = state;
 
   const [selectedInventory, setSelectedInventory] = useState(null); // Store the entire selected inventory object
 
@@ -224,8 +242,9 @@ const ProductDescriptionScreen = () => {
           {productDetails()}
 
           {/* {inventoryList2()} */}
-          {InventoryList3()}
+          {InventoryList()}
         </ScrollView>
+        {successDialog()}
       </View>
 
       {/* Sticky Bottom Bar */}
@@ -242,11 +261,7 @@ const ProductDescriptionScreen = () => {
       <View style={styles.imageWrapStyle}>
         <Image
           resizeMode="contain"
-          source={
-            item.image
-              ? { uri: item.image }
-              : require("../../assets/images/defaultProduct.png")
-          }
+          source="../../assets/images/defaultProduct.png"
           style={{ width: "100%", height: 200 }}
         />
       </View>
@@ -385,6 +400,21 @@ const ProductDescriptionScreen = () => {
   // Function to render pagination for the carousel
 
   function BottomBar({ quantity, setQuantity, isInventorySelected }) {
+    const [selectedButton, setSelectedButton] = useState(null);
+    const [pendingAction, setPendingAction] = useState(null); // Store the action to execute after state updates
+
+    // Run the pending action once selectedButton updates
+    useEffect(() => {
+      if (pendingAction) {
+        pendingAction(); // Execute the stored action
+      }
+    }, [selectedButton]);
+
+    const handleButtonPress = (buttonType, action) => {
+      setSelectedButton(buttonType); // Set the button selection first
+      setPendingAction(() => action); // Store the action to execute later
+    };
+
     return (
       <View
         style={{
@@ -407,7 +437,7 @@ const ProductDescriptionScreen = () => {
           elevation: 10,
         }}
       >
-        {isInventorySelected && (
+        {isCustomerActive() && isInventorySelected && (
           <View
             style={{
               flexDirection: "row",
@@ -416,27 +446,42 @@ const ProductDescriptionScreen = () => {
               gap: 10,
             }}
           >
+            {/* Buy Now Button */}
             <TouchableOpacity
               style={{
-                backgroundColor: Colors.companyPrimaryDark,
+                backgroundColor:
+                  selectedButton === "buy"
+                    ? Colors.companyPrimaryDark
+                    : Colors.lightGray,
                 borderRadius: 10,
                 paddingVertical: 12,
                 flex: 1,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "center",
+                borderWidth: 1,
+                borderColor: Colors.companyPrimaryDark,
               }}
-              onPress={() => onBuyItem(selectedInventory, openedProduct)}
+              onPress={() =>
+                handleButtonPress("buy", () =>
+                  onBuyItem(selectedInventory, openedProduct)
+                )
+              }
             >
               <FontAwesome
                 name="shopping-bag"
                 size={20}
-                color={Colors.whiteColor}
+                color={
+                  selectedButton === "buy" ? "white" : Colors.companyPrimaryDark
+                }
                 style={{ marginRight: 8 }}
               />
               <Text
                 style={{
-                  color: Colors.whiteColor,
+                  color:
+                    selectedButton === "buy"
+                      ? "white"
+                      : Colors.companyPrimaryDark,
                   fontSize: 16,
                   fontWeight: "bold",
                 }}
@@ -445,9 +490,13 @@ const ProductDescriptionScreen = () => {
               </Text>
             </TouchableOpacity>
 
+            {/* Add to Cart Button */}
             <TouchableOpacity
               style={{
-                backgroundColor: Colors.lightGray,
+                backgroundColor:
+                  selectedButton === "cart"
+                    ? Colors.companyPrimaryDark
+                    : Colors.lightGray,
                 borderRadius: 10,
                 paddingVertical: 12,
                 flex: 1,
@@ -457,17 +506,28 @@ const ProductDescriptionScreen = () => {
                 borderWidth: 1,
                 borderColor: Colors.companyPrimaryDark,
               }}
-              onPress={() => onAddItem(selectedInventory, openedProduct)}
+              onPress={() =>
+                handleButtonPress("cart", () =>
+                  onAddItem(selectedInventory, openedProduct)
+                )
+              }
             >
               <FontAwesome
                 name="shopping-cart"
                 size={20}
-                color={Colors.companyPrimaryDark}
+                color={
+                  selectedButton === "cart"
+                    ? "white"
+                    : Colors.companyPrimaryDark
+                }
                 style={{ marginRight: 8 }}
               />
               <Text
                 style={{
-                  color: Colors.companyPrimaryDark,
+                  color:
+                    selectedButton === "cart"
+                      ? "white"
+                      : Colors.companyPrimaryDark,
                   fontSize: 16,
                   fontWeight: "bold",
                 }}
@@ -476,9 +536,13 @@ const ProductDescriptionScreen = () => {
               </Text>
             </TouchableOpacity>
 
+            {/* Wishlist Button */}
             <TouchableOpacity
               style={{
-                backgroundColor: Colors.lightGray,
+                backgroundColor:
+                  selectedButton === "wishlist"
+                    ? Colors.companyPrimaryDark
+                    : Colors.lightGray,
                 borderRadius: 10,
                 paddingVertical: 12,
                 flex: 1,
@@ -488,17 +552,28 @@ const ProductDescriptionScreen = () => {
                 borderWidth: 1,
                 borderColor: Colors.companyPrimaryDark,
               }}
-              onPress={() => onAddItemToWishList(loggedInUser, openedProduct)}
+              onPress={() =>
+                handleButtonPress("wishlist", () =>
+                  onAddItemToWishList(loggedInUser, openedProduct)
+                )
+              }
             >
               <FontAwesome
                 name="heart"
                 size={20}
-                color={Colors.companyPrimaryDark}
+                color={
+                  selectedButton === "wishlist"
+                    ? "white"
+                    : Colors.companyPrimaryDark
+                }
                 style={{ marginRight: 8 }}
               />
               <Text
                 style={{
-                  color: Colors.companyPrimaryDark,
+                  color:
+                    selectedButton === "wishlist"
+                      ? "white"
+                      : Colors.companyPrimaryDark,
                   fontSize: 16,
                   fontWeight: "bold",
                 }}
@@ -512,17 +587,40 @@ const ProductDescriptionScreen = () => {
     );
   }
 
-  function InventoryList3() {
-    const totalInventory = openedProduct?.productInventoryList?.length || 0;
+  function successDialog() {
+    return (
+      <Dialog visible={showSuccessDialog} style={styles.dialogWrapStyle}>
+        <View
+          style={{ backgroundColor: Colors.whiteColor, alignItems: "center" }}
+        >
+          <View style={styles.successIconWrapStyle}>
+            <MaterialIcons name="done" size={40} color={Colors.primaryColor} />
+          </View>
+          <Text
+            style={{
+              ...Fonts.grayColor18Medium,
+              marginTop: Sizes.fixPadding + 10.0,
+            }}
+          >
+            Product has been added!
+          </Text>
+        </View>
+      </Dialog>
+    );
+  }
+
+  function InventoryList() {
+    const [selectedInventoryId, setSelectedInventoryId] = useState(null); // Track selected item
+
+    const handleInventorySelection = (item) => {
+      setSelectedInventoryId(item.id);
+      setSelectedInventory(item); // Set the selected item's ID
+      console.log("Selected Inventory:", item);
+      setIsInventorySelected(true);
+    };
 
     const renderItem = ({ item }) => {
-      const isSelected = selectedInventory === item.id;
-
-      const handleInventorySelection = (item) => {
-        setSelectedInventory(item); // Update the selected inventory state
-        console.log("Selected Inventory:", item); // Log the selected inventory
-        setIsInventorySelected(true);
-      };
+      const isSelected = selectedInventoryId === item.id; // Check if this item is selected
 
       return (
         <TouchableOpacity
@@ -538,8 +636,8 @@ const ProductDescriptionScreen = () => {
             padding: 16,
             marginVertical: 8,
             backgroundColor: isSelected
-              ? Colors.companyLight
-              : Colors.whiteColor,
+              ? Colors.companyPrimaryDark
+              : Colors.whiteColor, // Green when selected
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: isSelected ? 0.2 : 0.1,
@@ -561,7 +659,7 @@ const ProductDescriptionScreen = () => {
                 width: 30,
                 height: 30,
                 borderRadius: 15,
-                backgroundColor: Colors.companyLight,
+                backgroundColor: isSelected ? "white" : Colors.companyLight,
                 justifyContent: "center",
                 alignItems: "center",
                 marginRight: 10,
@@ -570,47 +668,19 @@ const ProductDescriptionScreen = () => {
               <FontAwesome5
                 name="rupee-sign"
                 size={16}
-                color={Colors.companyPrimaryDark}
+                color={isSelected ? "green" : Colors.companyPrimaryDark}
               />
             </View>
             <Text
               style={{
                 fontSize: 14,
-                color: Colors.grayColor,
+                color: isSelected ? "white" : Colors.companyPrimaryDark,
+                fontWeight: "bold",
               }}
             >
               MRP: ₹{item.mrp}
             </Text>
           </View>
-
-          {/* Stock */}
-          {/* <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: Colors.companyLight,
-                justifyContent: "center",
-                alignItems: "center",
-                marginRight: 10,
-              }}
-            >
-              <FontAwesome5
-                name="box"
-                size={16}
-                color={Colors.companyPrimaryDark}
-              />
-            </View>
-            <Text
-              style={{
-                fontSize: 14,
-                color: Colors.grayColor,
-              }}
-            >
-              Stock: {item.inventoryCount}
-            </Text>
-          </View> */}
         </TouchableOpacity>
       );
     };
@@ -639,10 +709,10 @@ const ProductDescriptionScreen = () => {
         </Text>
         <Text
           style={{
-            fontSize: 14, // Smaller than the heading
-            color: Colors.gray, // Subtle gray for hierarchy
-            fontWeight: "400", // Medium weight for readability
-            marginBottom: 12, // Adds spacing before the list
+            fontSize: 14,
+            color: Colors.gray,
+            fontWeight: "400",
+            marginBottom: 12,
           }}
         >
           Select a batch to process with purchase
@@ -694,12 +764,61 @@ const ProductDescriptionScreen = () => {
             Product Description
           </Text>
         </View>
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+          {/* Cart Icon */}
+          <View style={{ alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => navigation.push("cart/cartScreen")}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <MaterialCommunityIcons name="cart" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>
+              Cart
+            </Text>
+          </View>
+
+          {/* Wallet Icon */}
+          <View style={{ alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => navigation.push("wallet/WalletScreen")}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <MaterialCommunityIcons name="wallet" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 10, fontWeight: "bold", color: "white" }}>
+              Wallet
+            </Text>
+          </View>
+        </View>
       </View>
     );
   }
 };
 
 const styles = StyleSheet.create({
+  dialogWrapStyle: {
+    borderRadius: Sizes.fixPadding,
+    width: width - 100,
+    backgroundColor: Colors.whiteColor,
+    paddingHorizontal: Sizes.fixPadding * 2.0,
+    paddingBottom: Sizes.fixPadding * 3.0,
+    paddingTop: Sizes.fixPadding - 5.0,
+    alignSelf: "center",
+  },
   headerWrapStyle: {
     flexDirection: "row",
     alignItems: "center",

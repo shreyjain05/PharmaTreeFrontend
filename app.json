@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RN HealthMeds User App",
-    "slug": "rn-HealthMedsUser",
+    "name": "Pharma Tree",
+    "slug": "Pharma Tree",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,6 +14,8 @@
       "supportsTablet": false
     },
     "android": {
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"],
+      "usesCleartextTraffic": true,
       "package": "com.render.rnhealthmedsuser",
       "versionCode": 3,
       "adaptiveIcon": {
@@ -40,6 +42,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "10d2feef-7827-4764-93f2-c814f46e3efa"
+      }
     }
   }
 }

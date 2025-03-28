@@ -139,6 +139,58 @@ const orderSummaryScreen = () => {
     return null;
   };
 
+  const submitOrder = async () => {
+    console.log("Sending order");
+    try {
+      let totalAmount = total() - discountAmount() - userRoyalty;
+      const orderPayload = {
+        customerID: loggedInUser?.id || "1",
+        totalItems: cartItems.length.toString(),
+        billAmount: totalAmount.toString(),
+        totalCGST: "0", // Adjust as per actual calculation
+        totalSGST: "0", // Adjust as per actual calculation
+        totalBill: totalAmount.toString(), // Adjusting total calculation
+        discount: "0", // Modify based on actual discounts
+        paidAmount: "0",
+        pendingAmount: totalAmount.toString(),
+        onBehalf: "onBehalf",
+        deliveryAddress:
+          loggedInUser?.addresses[0]?.addressLine1 ||
+          "deliveryAddress_5f4cae7cc705",
+        orderItems: cartItems.map((item) => ({
+          productName: item.name,
+          productID: item.id.toString(),
+          quantity: item.qty.toString(),
+          billAmount: (item.qty * item.price).toString(),
+          itemCGST: "0", // Adjust as per actual item CGST
+          itemSGST: "0", // Adjust as per actual item SGST
+          itemBill: (item.qty * item.price).toString(), // Adjust as needed
+          discount: "0", // Modify based on actual discounts
+          batch: item.batch,
+        })),
+      };
+
+      console.log("Submitting order:", JSON.stringify(orderPayload, null, 2));
+
+      const response = await fetch(`${BASE_URL}/api/v1/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      console.log(`Order submitted successfully!`);
+      navigation.push("(tabs)");
+    } catch (error) {
+      console.error("Error submitting order:", error);
+    }
+  };
+
   // Assuming `openedProduct` is passed via navigation params
   var { selectedInventory } = useLocalSearchParams();
   selectedInventory = shoppingList;
@@ -465,7 +517,7 @@ const orderSummaryScreen = () => {
             <TouchableOpacity
               activeOpacity={0.6}
               style={styles.cashOnDeliveryButtonStyle}
-              onPress={() => alert("Order Submitted with Pay Later")}
+              onPress={() => submitOrder()}
             >
               <Text style={{ ...Fonts.whiteColor19Medium }}>Submit Order</Text>
             </TouchableOpacity>
@@ -473,7 +525,7 @@ const orderSummaryScreen = () => {
             <TouchableOpacity
               activeOpacity={0.6}
               style={styles.cashOnDeliveryButtonStyle}
-              onPress={() => alert("Order Submitted with Cash on Delivery")}
+              onPress={() => submitOrder()}
             >
               <Text style={{ ...Fonts.whiteColor19Medium }}>Submit Order</Text>
             </TouchableOpacity>
@@ -481,7 +533,7 @@ const orderSummaryScreen = () => {
             <TouchableOpacity
               activeOpacity={0.6}
               style={styles.proceedToPaymentButtonStyle}
-              onPress={() => alert("Proceeding to Payment")}
+              onPress={() => console.log("Proceeding to Payment")}
             >
               <Text style={{ ...Fonts.whiteColor19Medium }}>
                 Proceed to Payment

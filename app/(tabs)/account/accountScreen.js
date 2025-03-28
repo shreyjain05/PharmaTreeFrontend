@@ -51,14 +51,14 @@ const AccountScreen = () => {
           screen: "adminPanel/CustomerInformationScreen",
         },
         {
-          title: "Order Status Change",
-          icon: <ListChecks size={24} color="#10857F" />,
-          screen: "adminPanel/OrderStatusChangeScreen",
-        },
-        {
           title: "Orders",
           icon: <PlusCircle size={24} color="#10857F" />,
           screen: "adminPanel/OrderInformationScreen",
+        },
+        {
+          title: "Feedback",
+          icon: <PlusCircle size={24} color="#10857F" />,
+          screen: "adminPanel/FeedbackScreen",
         },
       ],
     },
@@ -83,12 +83,27 @@ const AccountScreen = () => {
       ],
     },
     {
+      title: "Finance & Payments",
+      items: [
+        {
+          title: "Payments Information",
+          icon: <Clock size={24} color="#10857F" />,
+          screen: "adminPanel/PaymentsInformationScreen",
+        },
+      ],
+    },
+    {
       title: "Settings & Configurations",
       items: [
         {
           title: "Grace Period Setting",
           icon: <Clock size={24} color="#10857F" />,
           screen: "adminPanel/GracePeriodSettingScreen",
+        },
+        {
+          title: "License Approvals",
+          icon: <Clock size={24} color="#10857F" />,
+          screen: "adminPanel/DrugLicenseApprovalScreen",
         },
       ],
     },
@@ -99,14 +114,21 @@ const AccountScreen = () => {
 
   // ✅ Filter menu items based on role
   const filterMenuItems = (menuItems, role) => {
+    if (role === "SUPERADMIN") return menuItems; // Superadmin sees everything
+
     return menuItems
       .map((section) => {
         let filteredItems = section.items.filter((item) => {
-          if (role === "SUPERADMIN") return true;
-          if (role === "ADMIN")
-            return section.title !== "Settings & Configurations";
-          if (role === "CUSTOMER")
-            return ["Orders", "Customer Information"].includes(item.title);
+          if (role === "ADMIN") {
+            return section.title !== "Settings & Configurations"; // Admin sees everything except settings
+          }
+
+          if (role === "CUSTOMER" || role === "CUST") {
+            return ["Orders", "Feedback", "Payments Information"].includes(
+              item.title
+            );
+          }
+
           return false; // Unknown role sees nothing
         });
 
@@ -208,8 +230,19 @@ const styles = StyleSheet.create({
     margin: 10,
     alignItems: "center",
   },
-  name: { fontSize: 20, fontWeight: "bold", color: "#333", marginBottom: 5 },
-  business: { fontSize: 16, color: "#666", marginBottom: 10 },
+  name: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+    textAlign: "center",
+  },
+  business: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 10,
+    textAlign: "center",
+  },
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -9,7 +9,6 @@ import {
   Modal,
   Button,
   ScrollView,
-  Picker,
   Dimensions,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,6 +16,7 @@ import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { Card, Dialog } from "react-native-paper";
 import BASE_URL from "../../constant/variable";
 import { useNavigation } from "expo-router";
+import { Picker } from "@react-native-picker/picker";
 
 const { width } = Dimensions.get("screen");
 
@@ -87,18 +87,17 @@ const CustomerInformationScreen = () => {
     }
   };
 
-  const handleTargetChange = async (targetValue, text) => {
-    const updatedTargets = selectedMetaData.customerTargets.map((target) => {
-      if (target.targetValue === targetValue) {
-        return { ...target, targetValue: text };
-      }
-      return target;
-    });
-    setSelectedMetaData({
-      ...selectedMetaData,
+  const handleTargetChange = async (index, text) => {
+    const updatedTargets = selectedMetaData.customerTargets.map((target, i) =>
+      i === index ? { ...target, targetValue: text } : target
+    );
+
+    setSelectedMetaData((prevMetaData) => ({
+      ...prevMetaData,
       customerTargets: updatedTargets,
-    });
-    console.log("Updated Metadata", selectedMetaData);
+    }));
+
+    console.log("Updated Metadata", updatedTargets);
   };
 
   function successDialog() {
@@ -144,7 +143,17 @@ const CustomerInformationScreen = () => {
         updateState({ showSuccessDialog: true });
         setTimeout(() => {
           updateState({ showSuccessDialog: false });
-          navigation.push("adminPanel/CustomerInformationScreen");
+          const fetchCustomers = async () => {
+            try {
+              const response = await fetch(`${BASE_URL}/api/v1/customer`);
+              if (!response.ok) throw new Error("Failed to fetch customers");
+              const data = await response.json();
+              setCustomerApiData(data);
+            } catch (error) {
+              console.error("Error fetching customers:", error);
+            }
+          };
+          fetchCustomers();
         }, 2000);
       }
     } catch (error) {
@@ -344,9 +353,7 @@ const CustomerInformationScreen = () => {
                     <TextInput
                       style={styles.input}
                       value={target.targetValue}
-                      onChangeText={(text) =>
-                        handleTargetChange(target.targetValue, text)
-                      }
+                      onChangeText={(text) => handleTargetChange(index, text)}
                       placeholder="Target Value"
                     />
                   </View>

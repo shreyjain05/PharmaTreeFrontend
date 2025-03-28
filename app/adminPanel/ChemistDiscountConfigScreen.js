@@ -9,12 +9,12 @@ import {
   Modal,
   Button,
   ScrollView,
-  Picker,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { Card } from "react-native-paper";
 import BASE_URL from "../../constant/variable";
+import { Picker } from "@react-native-picker/picker";
 
 const CustomerInformationScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");

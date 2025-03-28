@@ -21,6 +21,7 @@ import { Picker } from "@react-native-picker/picker";
 import { AppContext } from "../context/AppProvider";
 import BASE_URL from "../../constant/variable";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
+import { useSelector } from "react-redux";
 
 const { width } = Dimensions.get("screen");
 
@@ -40,6 +41,7 @@ const OrderInformationScreen = () => {
   });
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
   const { showSuccessDialog } = state;
+  const loggedInUser = useSelector((state) => state.auth.loggedInUser);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -56,6 +58,10 @@ const OrderInformationScreen = () => {
     };
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    console.log("LoggedInUser in OrderScreen:", loggedInUser);
+  }, [loggedInUser]);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -181,7 +187,10 @@ const OrderInformationScreen = () => {
   const getCustomerName = (customerID) => {
     const customer = customerApiData.find((c) => c.customerID === customerID);
     //if (customer) return customer.firstName + " " + customer.lastName;
-    if (customer) return customer.businessName;
+    if (customer) {
+      console.log("getCustomerName", customer);
+      return customer.businessName;
+    }
     return "Unknown Customer";
   };
 

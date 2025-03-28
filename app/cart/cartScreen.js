@@ -159,8 +159,9 @@ const CartScreen = () => {
                 <View style={styles.quantityContainer}>
                   <TextInput
                     style={styles.quantityInput}
-                    value={item.qty.toString()}
+                    value={item.qty !== undefined ? item.qty.toString() : "0"}
                     keyboardType="numeric"
+                    editable={false}
                   />
                 </View>
               </View>
@@ -425,13 +426,19 @@ const CartScreen = () => {
                     <Text style={styles.priceText}>₹{item.price}</Text>
                     <View style={styles.quantityContainer}>
                       <Text style={styles.quantityLabel}>Qty</Text>
-                      <TextInput
-                        style={styles.quantityInput}
-                        value={item.qty}
-                        onChangeText={(text) =>
-                          handleQuantityChange(item.id, text)
-                        }
-                      />
+                      <View style={styles.quantityContainer}>
+                        <TextInput
+                          style={styles.quantityInput}
+                          value={String(item.qty ?? "0")}
+                          keyboardType="numeric"
+                          editable={true}
+                          selectTextOnFocus={false}
+                          textAlign="center"
+                          onChangeText={(text) =>
+                            handleQuantityChange(item.id, text)
+                          }
+                        />
+                      </View>
                     </View>
                   </View>
                 </View>

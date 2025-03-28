@@ -19,7 +19,6 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { AppContext } from "../context/AppProvider";
 import BASE_URL from "../../constant/variable";
 import { Card, Dialog } from "react-native-paper";
-import { CheckCircle, XCircle, Search } from "lucide-react";
 
 const { width } = Dimensions.get("screen");
 
@@ -53,17 +52,13 @@ const DrugLicenseApprovalScreen = () => {
   const handleApproval = (userId, status) => {
     setSelectedUserId(userId);
     setSelectedStatus(status);
+    console.log("Received status:", status);
+    setApprovalModalVisible(true);
   };
-
-  useEffect(() => {
-    if (selectedUserId !== null && selectedStatus !== null) {
-      handleApprovalStatus();
-      setApprovalModalVisible(true);
-    }
-  }, [selectedUserId, selectedStatus]);
 
   const confirmApproval = () => {
     // Call API or update status here
+    handleApprovalStatus();
     console.log(
       `Status changed for user ${selectedUserId} to ${selectedStatus}`
     );
@@ -102,7 +97,11 @@ const DrugLicenseApprovalScreen = () => {
   }
 
   function handleApprovalStatus() {
-    console.log("Approving customer", selectedUserId);
+    console.log(
+      "Updating customer with Status",
+      selectedUserId,
+      selectedStatus
+    );
     fetch(`${BASE_URL}/api/v1/customer/approval`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -114,12 +113,11 @@ const DrugLicenseApprovalScreen = () => {
     })
       .then((res) => res.json())
       .then(() => {
-        console.log("Status:", status);
         updateCustomer(); // update user list after approval
         updateState({ showSuccessDialog: true });
         setTimeout(() => {
           updateState({ showSuccessDialog: false });
-          navigation.push("/DrugLicenseApprovalScreen");
+          navigation.push("adminPanel/DrugLicenseApprovalScreen");
         }, 2000);
       })
       .catch((err) => console.error(err));
@@ -203,7 +201,7 @@ const DrugLicenseApprovalScreen = () => {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <Card style={styles.card}>
-                {item.status === "INACTIVE" ? (
+                {item.status === "INACTIVE" && (
                   <View style={{ padding: 16 }}>
                     <View style={styles.centeredText}>
                       <Text style={styles.nameText}>
@@ -234,11 +232,6 @@ const DrugLicenseApprovalScreen = () => {
                         onPress={() => handleApproval(item.id, "Approved")}
                         style={styles.button}
                       >
-                        <CheckCircle
-                          size={20}
-                          color="#FFFFFF"
-                          style={styles.icon}
-                        />
                         <Text style={styles.buttonText}>Approve</Text>
                       </TouchableOpacity>
 
@@ -246,11 +239,6 @@ const DrugLicenseApprovalScreen = () => {
                         onPress={() => handleApproval(item.id, "Rejected")}
                         style={styles.button}
                       >
-                        <XCircle
-                          size={20}
-                          color="#FFFFFF"
-                          style={styles.icon}
-                        />
                         <Text style={styles.buttonText}>Reject</Text>
                       </TouchableOpacity>
 
@@ -258,18 +246,9 @@ const DrugLicenseApprovalScreen = () => {
                         onPress={() => handleApproval(item.id, "Review")}
                         style={styles.button}
                       >
-                        <CheckCircle
-                          size={20}
-                          color="#FFFFFF"
-                          style={styles.icon}
-                        />
                         <Text style={styles.buttonText}>Review</Text>
                       </TouchableOpacity>
                     </View>
-
-                    {status ? (
-                      <Text style={styles.statusText}>{String(status)}</Text>
-                    ) : null}
 
                     <TextInput
                       style={styles.commentBox}
@@ -283,26 +262,9 @@ const DrugLicenseApprovalScreen = () => {
                       onPress={() => setModalVisible(true)}
                       style={styles.viewButton}
                     >
-                      <CheckCircle
-                        size={20}
-                        color="#FFFFFF"
-                        style={styles.icon}
-                      />
                       <Text style={styles.buttonText}>View License</Text>
                     </TouchableOpacity>
                   </View>
-                ) : (
-                  <Text
-                    style={[
-                      styles.statusLabel,
-                      {
-                        color:
-                          item.status === "Approved" ? "#2E7D32" : "#D32F2F",
-                      },
-                    ]}
-                  >
-                    {item.status}
-                  </Text>
                 )}
 
                 {/* Approval Confirmation Modal */}
