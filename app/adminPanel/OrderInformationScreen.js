@@ -69,6 +69,7 @@ const OrderInformationScreen = () => {
         const response = await fetch(`${BASE_URL}/api/v1/customer`);
         if (!response.ok) throw new Error("Failed to fetch customers");
         const data = await response.json();
+        console.log("customers Data in Order", data);
         setCustomerApiData(data);
       } catch (error) {
         console.error("Error fetching customers:", error);
@@ -184,11 +185,17 @@ const OrderInformationScreen = () => {
     }
   };
 
+  const isCustomerAdmin = () => {
+    return (
+      loggedInUser?.isAdmin === "ADMIN" ||
+      loggedInUser?.isAdmin === "SUPERADMIN"
+    );
+  };
+
   const getCustomerName = (customerID) => {
-    const customer = customerApiData.find((c) => c.customerID === customerID);
+    const customer = customerApiData.find((c) => c.id === customerID);
     //if (customer) return customer.firstName + " " + customer.lastName;
     if (customer) {
-      console.log("getCustomerName", customer);
       return customer.businessName;
     }
     return "Unknown Customer";
@@ -286,73 +293,76 @@ const OrderInformationScreen = () => {
         showsVerticalScrollIndicator={false}
         style={styles.container}
       >
-        {(filteredData.length > 0 ? filteredData : orderApiData).map(
-          (order) => (
-            <Card key={order.orderID} style={styles.card}>
-              <Card.Content>
-                <Text style={styles.orderTitle}>
-                  <MaterialIcons name="receipt" size={20} color="#007bff" />{" "}
-                  Order Number: {order.orderID}
-                </Text>
-                <Divider style={styles.divider} />
+        {(isCustomerAdmin()
+          ? filteredData.length > 0
+            ? filteredData
+            : orderApiData
+          : filteredData > 0
+          ? filteredData.filter((order) => order.customerID === loggedInUser.id)
+          : orderApiData.filter((order) => order.customerID === loggedInUser.id)
+        ).map((order) => (
+          <Card key={order.orderID} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.orderTitle}>
+                <MaterialIcons name="receipt" size={20} color="#007bff" /> Order
+                Number: {order.orderID}
+              </Text>
+              <Divider style={styles.divider} />
 
-                <View style={styles.infoContainer}>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="user" size={18} color="#555" />
-                    <Text style={styles.orderText}>
-                      Customer: {getCustomerName(order.customerID)}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Entypo name="text-document" size={18} color="#555" />
-                    <Text style={styles.orderText}>
-                      Invoice: {order.invoiceNumber}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Ionicons
-                      name="information-circle"
-                      size={18}
-                      color="#555"
-                    />
-                    <Text style={[styles.orderText]}>
-                      Status: {order.status}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="rupee-sign" size={16} color="#28a745" />
-                    <Text style={styles.orderText}>
-                      Total Bill: ₹{order.totalBill}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="check-circle" size={18} color="green" />
-                    <Text style={styles.orderText}>
-                      Paid Amount: ₹{order.paidAmount}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <MaterialIcons name="warning" size={18} color="orange" />
-                    <Text style={[styles.orderText, styles.pending]}>
-                      Pending Amount: ₹{order.pendingAmount}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="calendar-alt" size={18} color="#555" />
-                    <Text style={styles.orderText}>
-                      Created At: {order.createdAt.split("T")[0]}
-                    </Text>
-                  </View>
+              <View style={styles.infoContainer}>
+                <View style={styles.row}>
+                  <FontAwesome5 name="user" size={18} color="#555" />
+                  <Text style={styles.orderText}>
+                    Customer: {getCustomerName(order.customerID)}
+                  </Text>
                 </View>
+                <View style={styles.row}>
+                  <Entypo name="text-document" size={18} color="#555" />
+                  <Text style={styles.orderText}>
+                    Invoice: {order.invoiceNumber}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Ionicons name="information-circle" size={18} color="#555" />
+                  <Text style={[styles.orderText]}>Status: {order.status}</Text>
+                </View>
+                <View style={styles.row}>
+                  <FontAwesome5 name="rupee-sign" size={16} color="#28a745" />
+                  <Text style={styles.orderText}>
+                    Total Bill: ₹{order.totalBill}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <FontAwesome5 name="check-circle" size={18} color="green" />
+                  <Text style={styles.orderText}>
+                    Paid Amount: ₹{order.paidAmount}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <MaterialIcons name="warning" size={18} color="orange" />
+                  <Text style={[styles.orderText, styles.pending]}>
+                    Pending Amount: ₹{order.pendingAmount}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <FontAwesome5 name="calendar-alt" size={18} color="#555" />
+                  <Text style={styles.orderText}>
+                    Created At: {order.createdAt.split("T")[0]}
+                  </Text>
+                </View>
+              </View>
 
-                <Button
-                  mode="contained"
-                  onPress={() => Linking.openURL(order.invoicePDFLink)}
-                  style={styles.pdfButton}
-                  icon="file-pdf-box"
-                >
-                  Open Invoice
-                </Button>
+              <Button
+                mode="contained"
+                onPress={() => Linking.openURL(order.invoicePDFLink)}
+                style={styles.pdfButton}
+                icon="file-pdf-box"
+              >
+                Open Invoice
+              </Button>
+              {["INVOICED", "DELIVERED", "DISPATCHED"].includes(
+                order.status?.toUpperCase()
+              ) && (
                 <Button
                   mode="contained"
                   onPress={() => openModal(order)}
@@ -360,10 +370,10 @@ const OrderInformationScreen = () => {
                 >
                   Update Order Status
                 </Button>
-              </Card.Content>
-            </Card>
-          )
-        )}
+              )}
+            </Card.Content>
+          </Card>
+        ))}
 
         <Modal visible={modalVisible} transparent={true} animationType="slide">
           <View style={styles.modalContainer}>
@@ -377,8 +387,10 @@ const OrderInformationScreen = () => {
                 onValueChange={(itemValue) => setOrderStatus(itemValue)}
                 style={styles.picker}
               >
-                <Picker.Item label="Dispatched" value="Dispatched" />
-                <Picker.Item label="Delivered" value="Delivered" />
+                {isCustomerAdmin() && (
+                  <Picker.Item label="Dispatched" value="DISPATCHED" />
+                )}
+                <Picker.Item label="Delivered" value="DELIVERED" />
               </Picker>
               <View style={styles.modalButtonContainer}>
                 <TouchableOpacity

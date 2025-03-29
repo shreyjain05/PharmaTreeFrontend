@@ -45,6 +45,8 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="auth/verificationScreen" />
           <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="cart/cartScreen" />
+          <Stack.Screen name="orderSummary/orderSummaryScreen" />
         </Stack>
       </AppProvider>
     </Provider>

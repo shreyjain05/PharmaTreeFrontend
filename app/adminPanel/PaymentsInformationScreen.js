@@ -21,11 +21,13 @@ import { Picker } from "@react-native-picker/picker";
 import { AppContext } from "../context/AppProvider";
 import BASE_URL from "../../constant/variable";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
+import { useSelector } from "react-redux";
 
 const { width } = Dimensions.get("screen");
 
 const PaymentsInformationScreen = () => {
   const navigation = useNavigation();
+  const loggedInUser = useSelector((state) => state.auth.loggedInUser);
   const { isAdmin } = useContext(AppContext);
   const [orderApiData, setOrderApiData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,10 @@ const PaymentsInformationScreen = () => {
     };
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    console.log("LoggedInUser in PaymentScreen:", loggedInUser);
+  }, [loggedInUser]);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -178,6 +184,13 @@ const PaymentsInformationScreen = () => {
     }
   };
 
+  const isCustomerAdmin = () => {
+    return (
+      loggedInUser?.isAdmin === "ADMIN" ||
+      loggedInUser?.isAdmin === "SUPERADMIN"
+    );
+  };
+
   const getCustomerName = (customerID) => {
     const customer = customerApiData.find((c) => c.customerID === customerID);
     //if (customer) return customer.firstName + " " + customer.lastName;
@@ -277,56 +290,57 @@ const PaymentsInformationScreen = () => {
         showsVerticalScrollIndicator={false}
         style={styles.container}
       >
-        {(filteredData.length > 0 ? filteredData : orderApiData).map(
-          (order) => (
-            <Card key={order.paymentID} style={styles.card}>
-              <Card.Content>
-                <Text style={styles.orderTitle}>
-                  <MaterialIcons name="receipt" size={20} color="#007bff" />{" "}
-                  Order Number: {order.orderID}
-                </Text>
-                <Divider style={styles.divider} />
+        {(isCustomerAdmin()
+          ? filteredData.length > 0
+            ? filteredData
+            : orderApiData
+          : filteredData > 0
+          ? filteredData.filter((order) => order.customerID === loggedInUser.id)
+          : orderApiData.filter((order) => order.customerID === loggedInUser.id)
+        ).map((order) => (
+          <Card key={order.paymentID} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.orderTitle}>
+                <MaterialIcons name="receipt" size={20} color="#007bff" /> Order
+                Number: {order.orderID}
+              </Text>
+              <Divider style={styles.divider} />
 
-                <View style={styles.infoContainer}>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="user" size={18} color="#555" />
-                    <Text style={styles.orderText}>
-                      Customer: {getCustomerName(order.customerID)}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Entypo name="text-document" size={18} color="#555" />
-                    <Text style={styles.orderText}>
-                      Invoice: {order.invoiceNumber}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Ionicons
-                      name="information-circle"
-                      size={18}
-                      color="#555"
-                    />
-                    <Text style={[styles.orderText]}>
-                      Customer: {order.customerID}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="check-circle" size={18} color="green" />
-                    <Text style={styles.orderText}>
-                      Paid Amount: ₹{order.amount}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <FontAwesome5 name="calendar-alt" size={18} color="#555" />
-                    <Text style={styles.orderText}>
-                      Created At: {order.createdAt.split("T")[0]}
-                    </Text>
-                  </View>
+              <View style={styles.infoContainer}>
+                <View style={styles.row}>
+                  <FontAwesome5 name="user" size={18} color="#555" />
+                  <Text style={styles.orderText}>
+                    Customer: {getCustomerName(order.customerID)}
+                  </Text>
                 </View>
-              </Card.Content>
-            </Card>
-          )
-        )}
+                <View style={styles.row}>
+                  <Entypo name="text-document" size={18} color="#555" />
+                  <Text style={styles.orderText}>
+                    Invoice: {order.invoiceNumber}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Ionicons name="information-circle" size={18} color="#555" />
+                  <Text style={[styles.orderText]}>
+                    Customer: {order.customerID}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <FontAwesome5 name="check-circle" size={18} color="green" />
+                  <Text style={styles.orderText}>
+                    Paid Amount: ₹{order.amount}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <FontAwesome5 name="calendar-alt" size={18} color="#555" />
+                  <Text style={styles.orderText}>
+                    Created At: {order.createdAt.split("T")[0]}
+                  </Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        ))}
 
         <Modal visible={modalVisible} transparent={true} animationType="slide">
           <View style={styles.modalContainer}>

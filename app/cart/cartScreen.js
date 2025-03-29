@@ -34,7 +34,7 @@ const CartScreen = () => {
   const { shoppingList, setShoppingList } = useContext(AppContext);
 
   useEffect(() => {
-    console.log("shoppingList in description:", shoppingList);
+    console.log("shoppingList in cart screen:", shoppingList);
   }, [shoppingList]);
 
   // Assuming `openedProduct` is passed via navigation params

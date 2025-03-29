@@ -185,22 +185,29 @@ const ProductDescriptionScreen = () => {
     // Convert productId to a string (since wishedProducts contains strings)
     let productIdStr = String(product.id.toString());
 
+    console.log("Selected productId: " + productIdStr);
+
     // Check if the product ID is already in wishedProducts
     if (!metaDataObj.wishedProducts.includes(productIdStr)) {
       metaDataObj.wishedProducts.push(productIdStr); // Add new product ID
     }
 
-    // Convert back to a string and update the userData object
-    userData.metaData = JSON.stringify(metaDataObj);
+    console.log("Wished Products: " + JSON.stringify(metaDataObj));
 
-    console.log("set target paylaod", userData);
+    // Convert back to a string and update the userData object
+    const updatedUserData = {
+      ...userData,
+      metaData: JSON.stringify(metaDataObj),
+    };
+
+    console.log("set target payload", updatedUserData);
     try {
       const updateResponse = await fetch(`${BASE_URL}/api/v1/customer`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(updatedUserData),
       });
 
       if (!updateResponse.ok)

@@ -183,9 +183,10 @@ const orderSummaryScreen = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
-      console.log(`Order submitted successfully!`);
-      navigation.push("(tabs)");
+      setShoppingList([]);
+      setTimeout(() => {
+        navigation.push("(tabs)");
+      }, 2000);
     } catch (error) {
       console.error("Error submitting order:", error);
     }
