@@ -16,11 +16,13 @@ import { AppContext } from "../context/AppProvider";
 import { Colors, Fonts, Sizes } from "../../constant/styles";
 import { useNavigation } from "expo-router";
 import BASE_URL from "../../constant/variable";
+import { useSelector } from "react-redux";
 
 const { width } = Dimensions.get("screen");
 
 const FeedbackScreen = () => {
   const navigation = useNavigation();
+  const loggedInUser = useSelector((state) => state.auth.loggedInUser);
   const [searchQuery, setSearchQuery] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [feedbackSubject, setFeedbackSubject] = useState("");
@@ -45,6 +47,13 @@ const FeedbackScreen = () => {
     } else {
       setFilteredData([]);
     }
+  };
+
+  const isCustomerAdmin = () => {
+    return (
+      loggedInUser?.isAdmin === "ADMIN" ||
+      loggedInUser?.isAdmin === "SUPERADMIN"
+    );
   };
 
   useEffect(() => {
@@ -72,7 +81,7 @@ const FeedbackScreen = () => {
       const feedbackData = {
         subject: feedbackSubject,
         feedbackText: feedbackText,
-        name: feedbackName,
+        name: loggedInUser.firstName + " " + loggedInUser.lastName,
       };
       console.log("Updated Config Data", feedbackData);
       const response = await fetch(`${BASE_URL}/api/v1/feedback`, {
@@ -142,7 +151,14 @@ const FeedbackScreen = () => {
         >
           <FlatList
             style={styles.flatList}
-            data={filteredData.filter((item) =>
+            data={(isCustomerAdmin()
+              ? filteredData
+              : filteredData.filter(
+                  (feedback) =>
+                    feedback.name ===
+                    loggedInUser.firstName + " " + loggedInUser.lastName
+                )
+            ).filter((item) =>
               item.subject.toLowerCase().includes(searchQuery.toLowerCase())
             )}
             keyExtractor={(item) => item.id.toString()}
@@ -196,7 +212,11 @@ const FeedbackScreen = () => {
             <TextInput
               style={styles.input}
               placeholder="Name"
-              value={feedbackName}
+              //value={feedbackName}
+              editable={false}
+              defaultValue={
+                loggedInUser.firstName + " " + loggedInUser.lastName
+              }
               onChangeText={setFeedbackName}
             />
             <TextInput

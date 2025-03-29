@@ -58,7 +58,7 @@ const CartScreen = () => {
     showBootomSheet: false,
   });
 
-  const [inputQty, setInputQty] = useState("1");
+  const [inputItem, setInputItem] = useState("");
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
 
@@ -133,52 +133,6 @@ const CartScreen = () => {
     </View>
   );
 
-  function cartItemsInfo() {
-    return (
-      <View>
-        {cartList.map((item) => (
-          <View key={item.id} style={styles.cardContainer}>
-            <Card style={styles.cartItemContainer}>
-              <Image
-                source={
-                  item.image
-                    ? { uri: item.image }
-                    : require("../../assets/images/defaultProduct.png")
-                }
-                style={styles.productImage}
-                resizeMode="contain"
-              />
-              <View style={styles.productDetails}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productManufacturer}>
-                  BY {item.manufacturer}
-                </Text>
-                <Text style={styles.productDetail}>{item.detail}</Text>
-                <Text style={styles.productPrice}>₹{item.price}</Text>
-
-                <View style={styles.quantityContainer}>
-                  <TextInput
-                    style={styles.quantityInput}
-                    value={item.qty !== undefined ? item.qty.toString() : "0"}
-                    keyboardType="numeric"
-                    editable={false}
-                  />
-                </View>
-              </View>
-              <MaterialIcons
-                name="delete"
-                size={24}
-                color={Colors.primaryColor}
-                style={styles.deleteIcon}
-                onPress={() => setDeleteDialog(true)}
-              />
-            </Card>
-          </View>
-        ))}
-      </View>
-    );
-  }
-
   function emptyCartInfo() {
     return (
       <View style={styles.emptyCartContainer}>
@@ -192,7 +146,8 @@ const CartScreen = () => {
     );
   }
 
-  function deleteItemDialog() {
+  function deleteItemDialog(id) {
+    console.log("delete id", id);
     return (
       <Modal
         animationType="fade"
@@ -233,7 +188,9 @@ const CartScreen = () => {
               >
                 <TouchableOpacity
                   activeOpacity={0.6}
-                  onPress={() => updateState({ deleteDialog: false })}
+                  onPress={() => {
+                    removeItem(id, false);
+                  }}
                   style={styles.noButtonStyle}
                 >
                   <Text style={{ ...Fonts.primaryColor18Medium }}>No</Text>
@@ -241,8 +198,7 @@ const CartScreen = () => {
                 <TouchableOpacity
                   activeOpacity={0.6}
                   onPress={() => {
-                    removeItem();
-                    updateState({ deleteDialog: false });
+                    removeItem(id, true);
                   }}
                   style={styles.yesButtonStyle}
                 >
@@ -326,10 +282,8 @@ const CartScreen = () => {
 
   function handleProductDelete(id) {
     console.log("Handle Deleted Received id :", id);
+    setInputItem(id);
     setDeleteDialog(true);
-    setCartList(
-      (prevCartList) => prevCartList.filter((item) => item.id !== id) // Removes the matching product
-    );
   }
 
   function getAddress() {
@@ -450,7 +404,7 @@ const CartScreen = () => {
                 size={24}
                 color={Colors.primaryColor}
                 onPress={() => {
-                  // handleProductDelete(item.id)
+                  handleProductDelete(item.id);
                 }}
                 style={styles.deleteIcon}
               />
@@ -461,7 +415,19 @@ const CartScreen = () => {
     );
   }
 
-  function removeItem() {}
+  function removeItem(id, isDelete) {
+    console.log("Removing item", inputItem, isDelete);
+    if (isDelete) {
+      setCartList(
+        (prevCartList) => prevCartList.filter((item) => item.id !== inputItem) // Removes the matching product
+      );
+      setShoppingList(
+        (prevShoppingList) =>
+          prevShoppingList.filter((item) => item.id !== inputItem) // Removes the matching product from the shopping list
+      );
+    }
+    setDeleteDialog(false);
+  }
 
   function header() {
     return (
